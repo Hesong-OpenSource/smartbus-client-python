@@ -1,38 +1,71 @@
+#!/usr/local/bin/python3.3
+
 '''
 Created on 2013-1-29
 
 @author: root
 '''
+from locale import atoi
+from uuid import uuid1
 
 if __name__ == '__main__':
     import sys
     import os
+    import threading
+    from time import time, sleep
     import smartbus.client
     
-    os.environ
+    cc = 0
+    bg_tm = time()
+    cc_sent = 0
+    cc_recv = 0
+    cc_corr = 0
+    cc_tmot = 0
+    map_data = {}
         
 #    lib_file_path = None  # '/media/sf_E_DRIVE/My Projects/TK ClientsServiceSystem/smartbus/lib/linux-gcc4.1.2-x86/libbusipccli.so'
-    def on_connect_ok():
-        print('connected!')
+    def on_connect_ok(client, unitId):
+        print('connected!', unitId)
         
-    def on_connect_err(errno):
-        print('connect error:', errno)
+    def on_connect_err(client, unitId, errno):
+        print('connect error:', unitId, errno)
+        raise Exception()
         
-    def on_receive(self, txt):
-        print('receive:', txt)
+    def on_receive(client, packInfo, txt):
+        print('receive:', packInfo, txt)
     
-    def onInvokeFlowRespond(project, invokeId, result):
-        print ('onInvokeFlowRespond', project, invokeId, result)
+    def onInvokeFlowRespond(client, packInfo, project, invokeId, result):
+        global cc
+        global cc_recv
+        global cc_corr
+        global map_data
+        global bg_tm
+        cc_recv += 1
+        if result[0] == map_data.pop(invokeId, None):
+            cc_corr += 1
+        if cc_recv == cc:
+            print('---------------------------------------------------------------')
+            print(cc, 'tasks, duration time(sec):', time() - bg_tm)
+            print('sent: %d, received: %d, correct:%d, timeout:%d' % (cc_sent, cc_recv, cc_corr, cc_tmot))
+            print('---------------------------------------------------------------')
+            print()
+        
+    def onInvokeFlowTimeout(client, packInfo, project, invokeId):
+        global cc_tmot
+        cc_tmot += 1
+        print('timeout:', project, invokeId, file=sys.stderr)
     
     smartbus.client.Client.initialize(20, 20)
-    client = smartbus.client.Client()
+    client = smartbus.client.Client.instance()
     assert(client)
     print(client)
     client.onConnectSuccess = on_connect_ok
     client.onConnectFail = on_connect_err
     client.onReceiveText = on_receive
     client.onInvokeFlowRespond = onInvokeFlowRespond
-    client.connect()
+    client.onInvokeFlowTimeout = onInvokeFlowTimeout
+    rt = client.connect()
+    print('connect returns', rt)
     
     while True:
         s = ''
@@ -43,13 +76,38 @@ if __name__ == '__main__':
             
         if s.strip().lower() in ('quit', 'exit'):
             break
-        else:            
-#            client.sendText(1, 2, 1, 1, 1, s)
-            project = 'Project1'
-            flow = 'Flow1'
-            print('invoking <{%s}.{%s}> ...' % (project, flow))
-            rt = client.invokeFlow(0, 0, 'Project1', 'Flow1', s, True, 100000)
-            print('returns %d' % (rt))
+        else:
+            n = 0
+            try:
+                n = atoi(s)
+            except:
+                pass
+            
+            if n:
+                cc_sent = 0
+                cc_recv = 0
+                cc_corr = 0
+                cc_tmot = 0
+                project = 'Project1'
+                flow = 'Flow1'
+                map_data.clear()
+                cc = n
+                bg_tm = time()
+                for i in range(n):
+                    txt = '%09d-%s' % (cc_sent, uuid1().hex)
+                    rt = client.invokeFlow(0, 0, 'Project1', 'Flow1', txt, timeout=20)
+                    if rt < 0:
+                        print('send error', file=sys.stderr)
+                        break
+                    cc_sent += 1
+                    map_data[rt] = txt
+                    while cc_sent - cc_recv > 1000:
+                        sleep(0.001)
+                    
+                    
+            elif s.strip().lower() == 'show':
+                print('sent: %d, received: %d, correct:%d, timeout:%d' % (cc_sent, cc_recv, cc_corr, cc_tmot))
+                
 
     print('finalize...')
     smartbus.client.Client.finalize()

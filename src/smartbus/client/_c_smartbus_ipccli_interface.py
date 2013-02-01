@@ -56,14 +56,14 @@ class _struct_PACKET_HEAD(Structure):
         ('dest_unit_client_id', c_char),
         ('reserved', c_char * 2),
         ('packet_size', c_long),
-        ('datalen', c_long)
+        ('datalen', c_long),
     ]
 
 
 #===============================================================================
 # call-back function type
 #===============================================================================
-_c_fntyp_connection_cb = CFUNCTYPE(c_int, c_void_p, c_int)
+_c_fntyp_connection_cb = CFUNCTYPE(c_int, c_void_p, c_int, c_int)
 _c_fntyp_disconnect_cb = CFUNCTYPE(None, c_void_p)
 _c_fntyp_recvdata_cb = CFUNCTYPE(None, c_void_p, POINTER(_struct_PACKET_HEAD), c_void_p, c_int)
 _c_fntyp_invokeflow_ret_cb = CFUNCTYPE(None, c_void_p, POINTER(_struct_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
@@ -114,4 +114,3 @@ def load_lib(filepath=lib_filename):
         else:
             raise NotImplementedError()
     return _lib
-

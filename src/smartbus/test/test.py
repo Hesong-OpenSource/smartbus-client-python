@@ -5,40 +5,47 @@ Created on 2013-1-28
 '''
 import unittest
 
-    
-    
-def on_connection(param, ack):
-    pass
+import smartbus.client
 
-def on_disconnect(param):
-    pass
 
-def on_recvdata(param, head, data, size):
-    pass
 
 class Test(unittest.TestCase):
-
+    
+    def on_connect_ok(self):
+        pass
+        
+    def on_connect_err(self, errno):
+        raise AssertionError('on_connect_err')
+    
+    def on_flow_respond(self, packInfo, project, invokeId, result):
+        pass
+        
+    def on_flow_timeout(self, packInfo, project, invokeId):
+        raise AssertionError('on_flow_timeout')
 
     def setUp(self):
-        pass
-
+        self.invoke_counter = 0
+        self.flow_server = 0
+        self.flow_process = 0
+        self.flow_project = 'Project1'
+        self.flow_flow = 'FLow1'
+        smartbus.client.Client.initialize(20, 20)
+        client = smartbus.client.Client.instance()
+        client.onConnectSuccess = self.on_connect_ok
+        client.onConnectFail = self.on_connect_err
+        client.onInvokeFlowRespond = self.on_flow_respond
+        client.onInvokeFlowTimeout = self.on_flow_timeout
+        client.connect()
 
     def tearDown(self):
-        pass
-
-    def testLoad(self):
-        import smartbus.client
-        
-        lib_file_path = '/media/sf_E_DRIVE/My Projects/TK ClientsServiceSystem/smartbus/lib/linux-gcc4.1.2-x86/libbusipccli.so'
-        
-        smartbus.client.Client.initialize(1, 11, lib_file_path)
-        client = smartbus.client.Client()
-        assert(client)
-        client.connect('username', 'password', 'info')
         smartbus.client.Client.finalize()
+
+    def testInvokeFlow(self):
+        smartbus.client.Client.instance().invokeFlow(self.flow_server, self.flow_process, self.flow_project, self.flow_flow)    
+        
 
 
 
 if __name__ == "__main__":
-    # import sys;sys.argv = ['', 'Test.testLoad']
+    # import sys;sys.argv = ['', 'Test.testInvokeFlow']
     unittest.main()
