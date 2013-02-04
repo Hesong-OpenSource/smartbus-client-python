@@ -11,7 +11,7 @@ import sys
 
 from ctypes import CDLL, RTLD_GLOBAL, Structure, \
     c_byte, c_char, c_ushort, c_int, c_long, c_void_p, \
-    CFUNCTYPE, POINTER, c_char_p, pointer
+    CFUNCTYPE, POINTER, c_char_p
 
 from types import FunctionType, MethodType
 
@@ -66,7 +66,7 @@ class _struct_PACKET_HEAD(Structure):
 _c_fntyp_connection_cb = CFUNCTYPE(c_int, c_void_p, c_int, c_int)
 _c_fntyp_disconnect_cb = CFUNCTYPE(None, c_void_p)
 _c_fntyp_recvdata_cb = CFUNCTYPE(None, c_void_p, POINTER(_struct_PACKET_HEAD), c_void_p, c_int)
-_c_fntyp_invokeflow_ret_cb = CFUNCTYPE(None, c_void_p, POINTER(_struct_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
+_c_fntyp_invokeflow_ret_cb = CFUNCTYPE(None, c_void_p, c_byte, POINTER(_struct_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
 
 #===============================================================================
 # function type and param flags
@@ -89,28 +89,27 @@ _paramflags_SendData = (1, 'cmd', c_byte), (1, 'cmdtype', c_byte), (1, 'dst_unit
 _c_fntyp_RemoteInvokeFlow = CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
 _paramflags_RemoteInvokeFlow = (1, 'server_unitid', c_int), (1, 'processindex', c_int), (1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (1, 'in_valuelist', c_char_p)
 
+
+#===============================================================================
+# load library function
+#===============================================================================
 def load_lib(filepath=lib_filename):
     if not filepath:
         filepath = lib_filename
     global _lib
     if not _lib:
-        if 'posix' in sys.builtin_module_names:
-            _lib = CDLL(filepath, mode=RTLD_GLOBAL)
-            global _c_fn_Init
-            _c_fn_Init = _c_fntyp_Init(('SmartBusIpcCli_Init', _lib), _paramflags_Init)
-            global _c_fn_Release
-            _c_fn_Release = _c_fntyp_Release(('SmartBusIpcCli_Release', _lib), _paramflags_Release)
-            global _c_fn_SetCallBackFn
-            _c_fn_SetCallBackFn = _c_fntyp_SetCallBackFn(('SmartBusIpcCli_SetCallBackFn', _lib), _paramflags_SetCallBackFn)
-            global _c_fn_CreateConnect
-            _c_fn_CreateConnect = _c_fntyp_CreateConnect(('SmartBusIpcCli_CreateConnect', _lib), _paramflags_CreateConnect)
-            global _c_fn_SendData
-            _c_fn_SendData = _c_fntyp_SendData(('SmartBusIpcCli_SendData', _lib), _paramflags_SendData)
-            global _c_fn_RemoteInvokeFlow
-            _c_fn_RemoteInvokeFlow = _c_fntyp_RemoteInvokeFlow(('SmartBusIpcCli_RemoteInvokeFlow', _lib), _paramflags_RemoteInvokeFlow)
-        elif 'nt'  in sys.builtin_module_names:
-            # TODO: 
-            raise NotImplementedError()
-        else:
-            raise NotImplementedError()
+        _lib = CDLL(filepath, mode=RTLD_GLOBAL)
+        global _c_fn_Init
+        _c_fn_Init = _c_fntyp_Init(('SmartBusIpcCli_Init', _lib), _paramflags_Init)
+        global _c_fn_Release
+        _c_fn_Release = _c_fntyp_Release(('SmartBusIpcCli_Release', _lib), _paramflags_Release)
+        global _c_fn_SetCallBackFn
+        _c_fn_SetCallBackFn = _c_fntyp_SetCallBackFn(('SmartBusIpcCli_SetCallBackFn', _lib), _paramflags_SetCallBackFn)
+        global _c_fn_CreateConnect
+        _c_fn_CreateConnect = _c_fntyp_CreateConnect(('SmartBusIpcCli_CreateConnect', _lib), _paramflags_CreateConnect)
+        global _c_fn_SendData
+        _c_fn_SendData = _c_fntyp_SendData(('SmartBusIpcCli_SendData', _lib), _paramflags_SendData)
+        global _c_fn_RemoteInvokeFlow
+        _c_fn_RemoteInvokeFlow = _c_fntyp_RemoteInvokeFlow(('SmartBusIpcCli_RemoteInvokeFlow', _lib), _paramflags_RemoteInvokeFlow)
+
     return _lib

@@ -1,4 +1,5 @@
-#!/usr/local/bin/python3.3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 '''
 Created on 2013-1-29
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     import os
     import threading
     from time import time, sleep
-    import smartbus.client
+    import smartbus.ipcclient
     
     cc = 0
     bg_tm = time()
@@ -55,8 +56,8 @@ if __name__ == '__main__':
         cc_tmot += 1
         print('timeout:', project, invokeId, file=sys.stderr)
     
-    smartbus.client.Client.initialize(20, 20)
-    client = smartbus.client.Client.instance()
+    smartbus.ipcclient.Client.initialize(20, 20)
+    client = smartbus.ipcclient.Client.instance()
     assert(client)
     print(client)
     client.onConnectSuccess = on_connect_ok

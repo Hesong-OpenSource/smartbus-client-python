@@ -12,10 +12,12 @@ import sys
 from ctypes import c_char, c_byte, c_int, c_char_p , c_void_p
 from types import FunctionType, MethodType
 
-if sys.version_info[0] == 2:
-    import _c_smartbus_ipccli_interface as sbicif
-elif sys.version_info[0] == 3:
+if sys.version_info[0] == 3:
     from . import _c_smartbus_ipccli_interface as sbicif
+elif sys.version_info[0] == 2:
+    import _c_smartbus_ipccli_interface as sbicif
+else:
+    raise NotImplementedError()
 
 default_encoding = sys.getfilesystemencoding()
 
@@ -50,6 +52,12 @@ class NotInitializedError(Exception):
     pass
 
 class AlreadyExistsError(Exception):
+    pass
+
+class ConnectError(Exception):
+    pass
+
+class SendDataError(Exception):
     pass
 
 class PackInfo(object):
@@ -218,7 +226,7 @@ class Client(object):
                 elif isinstance(fn, MethodType):
                     fn(packInfo, txt)
     
-    def __invokeflow_ret_cb(self, arg, head, projectid, invoke_id, ret, param):
+    def __invokeflow_ret_cb(self, arg, local_clientid, head, projectid, invoke_id, ret, param):
         if ret == 1:
             if hasattr(self, 'onInvokeFlowRespond'):
                 fn = self.onInvokeFlowRespond
@@ -264,13 +272,17 @@ class Client(object):
         b_username, _ = text_to_bytes(username, self.encoding)
         b_password, _ = text_to_bytes(password, self.encoding)
         b_info, _ = text_to_bytes(info, self.encoding)
-        return sbicif._c_fn_CreateConnect(c_char_p(b_username), c_char_p(b_password), c_char_p(b_info))
+        result = sbicif._c_fn_CreateConnect(c_char_p(b_username), c_char_p(b_password), c_char_p(b_info))
+        if result != 0:
+            raise ConnectError()
  
     def sendText(self, cmd, cmdType, dstUnitId, dstClientId, dstClientType, txt, encoding=None):
         if not encoding:
             encoding = self.encoding
         data, data_sz = text_to_bytes(txt, encoding)
-        return sbicif._c_fn_SendData(c_byte(cmd), c_byte(cmdType), c_int(dstUnitId), c_int(dstClientId), c_int(dstClientType), c_char_p(data), c_int(data_sz))
+        result = sbicif._c_fn_SendData(c_byte(cmd), c_byte(cmdType), c_int(dstUnitId), c_int(dstClientId), c_int(dstClientType), c_char_p(data), c_int(data_sz))
+        if result != 0:
+            raise SendDataError()
     
     def invokeFlow(self, server, process, project, flow, parameters=[], isNeedReturn=True, timeout=30):
         c_server_unitid = c_int(server)
@@ -289,5 +301,8 @@ class Client(object):
             elif not isinstance(parameters, list):
                 raise TypeError('argument "parameters" must be one of None, int, float, str, bool , dict, list, tuple')
         c_in_valuelist = c_char_p(text_to_bytes(str(parameters), self.encoding)[0])
-        return sbicif._c_fn_RemoteInvokeFlow(c_server_unitid, c_processindex, c_project_id, c_flowid, c_invoke_mode, c_timeout, c_in_valuelist)
+        result = sbicif._c_fn_RemoteInvokeFlow(c_server_unitid, c_processindex, c_project_id, c_flowid, c_invoke_mode, c_timeout, c_in_valuelist)
+        if result != 0:
+            raise SendDataError()
+
     
