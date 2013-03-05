@@ -1,127 +1,67 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 
-'''
-Created on 2013-1-28
-
-@author: lxy@hesong.net
-'''
+##@package smartbus.ipcclient
+#smartbus 进程通信客户端的Python接口类
+#
+#
+# @date 2013-1-28
+#
+# @author: lxy@hesong.net
+#
 
 import os
 import sys
-from ctypes import c_char, c_byte, c_int, c_char_p , c_void_p
+from ctypes import string_at, c_char, c_byte, c_int, c_void_p, c_char_p 
 from types import FunctionType, MethodType
 
-if sys.version_info[0] == 3:
-    from . import _c_smartbus_ipccli_interface as sbicif
-elif sys.version_info[0] == 2:
+if sys.version_info[0] < 3:
     import _c_smartbus_ipccli_interface as sbicif
+    from smartbus import PackInfo
+    from smartbus.utils import default_encoding, bytes_to_text, text_to_bytes, ifnone
 else:
-    raise NotImplementedError()
+    from . import _c_smartbus_ipccli_interface as sbicif
+    from .. import PackInfo
+    from ..utils import default_encoding, bytes_to_text, text_to_bytes, ifnone
 
-default_encoding = sys.getfilesystemencoding()
-
-def text_to_bytes(txt, encoding=default_encoding):
-    data = None
-    datasz = 0
-    if txt is not None:
-        if sys.version_info[0] == 2:
-            import types
-            if type(txt) == types.StringType:
-                data = txt
-            elif type(txt) == types.UnicodeType:
-                data = txt.encode(encoding)
-            else:
-                raise TypeError('agument "text" must be StringType or UnicodeType')
-            datasz = len(data)
-        elif sys.version_info[0] == 3:
-            data = txt.encode(encoding)
-            datasz = len(data)
-        else:
-            raise NotImplementedError()
-    return data, datasz
-
-def bytes_to_text(data, encoding=default_encoding):
-    txt = None
-    if data is not None:
-        txt = data.decode(encoding)            
-    return txt
-    
-
-class NotInitializedError(Exception):
-    pass
-
-class AlreadyExistsError(Exception):
-    pass
-
-class ConnectError(Exception):
-    pass
-
-class SendDataError(Exception):
-    pass
-
-class PackInfo(object):
-    def __init__(self, lp_head_struct):
-        self.__cmd = 0
-        self.__cmdType = 0
-        self.__srcUnitClientType = 0
-        self.__srcUnitId = 0
-        self.__srcUnitClientId = 0
-        self.__dstUnitClientType = 0
-        self.__dstUnitId = 0
-        self.__dstUnitClientId = 0
-        if lp_head_struct:
-            head_struct = lp_head_struct.contents
-            if head_struct:
-                self.__cmd = head_struct.cmd
-                self.__cmdType = head_struct.cmdtype
-                self.__srcUnitClientType = ord(head_struct.src_unit_client_type)
-                self.__srcUnitId = ord(head_struct.src_unit_id)
-                self.__srcUnitClientId = ord(head_struct.src_unit_client_id)
-                self.__dstUnitClientType = ord(head_struct.dest_unit_client_type)
-                self.__dstUnitId = ord(head_struct.dest_unit_id)
-                self.__dstUnitClientId = ord(head_struct.dest_unit_client_id)
-    
-    @property
-    def cmd(self):
-        return self.__cmd
-    
-    @property
-    def cmdType(self):
-        return self.__cmdType
-    
-    @property
-    def srcUnitClientType(self):
-        return self.__srcUnitClientType
-    
-    @property
-    def srcUnitId(self):
-        return self.__srcUnitId
-    
-    @property
-    def srcUnitClientId(self):
-        return self.__srcUnitClientId
-    
-    @property
-    def dstUnitClientType(self):
-        return self.__dstUnitClientType
-    
-    @property
-    def dstUnitId(self):
-        return self.__dstUnitId
-    
-    @property
-    def dstUnitClientId(self):
-        return self.__dstUnitClientId
-
+## SmartBus IPC 客户端类
+#
+# 这个类封装了 SmartBus IPC 客户端的一系列方法与事件
 class Client(object):
     __lib = None
-    __inited = False
     __instance = None
     
+    ## 构造函数
+    # @param self
+    # @param encoding 收/发字符串时使用的编码。默认为操作系统编码。
+    # @see smartbus.utils.default_encoding
+    # @see encoding
+    def __init__(self, encoding=default_encoding):
+        ## 编码
+        #
+        # 收/发字符串时使用该编码进行编解码处理。该属性由构造函数的encoding参数指定
+        self.encoding = encoding
+        cls = type(self)
+        if not cls.__lib:
+            raise NotInitializedError()
+        if cls.__instance:
+            raise AlreadyExistsError()
+        cls.__instance = self
     
+    def __del__(self):
+        cls = type(self)
+        cls.__instance = None
+    
+    ## 初始化
+    #
+    # 每次使用之前，必须先调用该类方法，进行初始化
+    # @param cls 类
+    # @param clientid 客户端ID。在同一个节点中，ID必须唯一。
+    # @param clienttype 客户端类型。
+    # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、当前目录、运行目录、文件目录。@see _c_smartbus_ipccli_interface.lib_filename
     @classmethod
     def initialize(cls, clientid, clienttype, libraryfile=sbicif.lib_filename):
+        if cls.__lib:
+            raise AlreadyInitializedError()
         if not libraryfile:
             libraryfile = sbicif.lib_filename
         try:
@@ -137,46 +77,42 @@ class Client(object):
                         cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(__file__), libraryfile))
                     except:
                         raise
-        if not cls.__inited:
-            sbicif._c_fn_Init(clienttype, clientid)
-            cls.__inited = True
-    
+
+        sbicif._c_fn_Init(clienttype, clientid)
+        cls.__c_fn_connection_cb = sbicif._c_fntyp_connection_cb(cls.__connection_cb)
+        cls.__c_fn_recvdata_cb = sbicif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
+        cls.__c_fn_disconnect_cb = sbicif._c_fntyp_disconnect_cb(cls.__disconnect_cb)
+        cls.__c_fn_invokeflow_ret_cb = sbicif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ret_cb)
+        sbicif._c_fn_SetCallBackFn(
+            cls.__c_fn_connection_cb,
+            cls.__c_fn_recvdata_cb,
+            cls.__c_fn_disconnect_cb,
+            cls.__c_fn_invokeflow_ret_cb,
+            c_void_p(None)
+        )
+
+    ## 释放库
+    # @param cls 类
     @classmethod 
     def finalize(cls):
-        if cls.__inited:
+        if cls.__instance:
+            del cls.__instance
+            cls.__instance = None
+        if cls.__lib:
             sbicif._c_fn_Release()
-            cls.__inited = False
+            cls.__lib = None
     
+    ## 判断是否初始化
+    #
+    # @param cls 类
+    # @return 布尔型返回值
     @classmethod  
-    def isInitialize(cls):
-        return cls.__inited
+    def isInitialized(cls):
+        return cls.__lib is not None
     
-    def __init__(self, encoding=default_encoding):
-        if sys.version_info[0] == 2:
-            ''.decode(encoding)
-        elif sys.version_info[0] == 3:
-            ''.encode(encoding)
-        else:
-            raise NotImplementedError()
-        self.encoding = encoding
-        if not Client.__inited:
-            raise NotInitializedError()
-        if Client.__instance:
-            raise AlreadyExistsError()
-        else:
-            self.__c_fn_connection_cb = sbicif._c_fntyp_connection_cb(self.__connection_cb)
-            self.__c_fn_recvdata_cb = sbicif._c_fntyp_recvdata_cb(self.__recvdata_cb)
-            self.__c_fn_disconnect_cb = sbicif._c_fntyp_disconnect_cb(self.__disconnect_cb)
-            self.__c_fn_invokeflow_ret_cb = sbicif._c_fntyp_invokeflow_ret_cb(self.__invokeflow_ret_cb)
-            sbicif._c_fn_SetCallBackFn(
-                self.__c_fn_connection_cb,
-                self.__c_fn_recvdata_cb,
-                self.__c_fn_disconnect_cb,
-                self.__c_fn_invokeflow_ret_cb,
-                c_void_p(None)
-            )
-            Client.__instance = self          
-    
+    ## 返回该类型的实例
+    #
+    # 由于一个进程只能有一个实例，所以可用该方法返回目前的实例。
     @classmethod
     def instance(cls):
         if cls.__instance:
@@ -184,125 +120,248 @@ class Client(object):
         else:
             return Client()
     
-    def __connection_cb(self, arg, accesspoint_unitid, ack):
-        print('__connection_cb', self, arg, accesspoint_unitid, ack)
-        result = 0
+    @classmethod
+    def __connection_cb(cls, arg, local_clientid, accesspoint_unitid, ack):
+        inst = cls.__instance
         if ack == 0:  # 连接成功
-            if hasattr(self, 'onConnectSuccess'):
-                fn = self.onConnectSuccess
+            if hasattr(inst, 'onConnectSuccess'):
+                fn = inst.onConnectSuccess
                 if isinstance(fn, FunctionType):
-                    result = fn(self, accesspoint_unitid)
+                    fn(inst, accesspoint_unitid)
                 elif isinstance(fn, MethodType):
-                    result = fn(accesspoint_unitid)
-                if result is None:
-                    result = 0
-                if not isinstance(result, int):
-                    raise TypeError('"onConnectSuccess" must return an Integer or None')
+                    fn(accesspoint_unitid)
         else:  # 连接失败
-            if hasattr(self, 'onConnectFail'):
-                fn = self.onConnectFail
+            if hasattr(inst, 'onConnectFail'):
+                fn = inst.onConnectFail
                 if isinstance(fn, FunctionType):
-                    fn(self, accesspoint_unitid, ack)
+                    fn(inst, accesspoint_unitid, ack)
                 elif isinstance(fn, MethodType):
                     fn(accesspoint_unitid, ack)
-        return result
-
-    def __disconnect_cb(self, param):
-        if hasattr(self, 'onDisconnect'):
-            fn = self.onDisconnect
+                    
+    @classmethod
+    def __disconnect_cb(cls, param, local_clientid):
+        inst = cls.__instance
+        if hasattr(inst, 'onDisconnect'):
+            fn = inst.onDisconnect
             if isinstance(fn, FunctionType):
-                fn(self)
+                fn(inst)
             elif isinstance(fn, MethodType):
                 fn()
     
-    def __recvdata_cb(self, param, head, data, size):
-        if hasattr(self, 'onReceiveText'):
-            fn = self.onReceiveText
+    @classmethod
+    def __recvdata_cb(cls, param, local_clientid, head, data, size):
+        inst = cls.__instance
+        if hasattr(inst, 'onReceiveText'):
+            fn = inst.onReceiveText
             if callable(fn):
                 packInfo = PackInfo(head)
-                txt = bytes_to_text(data, self.encoding)
+                txt = bytes_to_text(string_at(data, size), inst.encoding)
                 if isinstance(fn, FunctionType):
-                    fn(self, packInfo, txt)
+                    fn(inst, packInfo, txt)
                 elif isinstance(fn, MethodType):
                     fn(packInfo, txt)
     
-    def __invokeflow_ret_cb(self, arg, local_clientid, head, projectid, invoke_id, ret, param):
+    @classmethod
+    def __invokeflow_ret_cb(cls, arg, local_clientid, head, projectid, invoke_id, ret, param):
+        inst = cls.__instance
         if ret == 1:
-            if hasattr(self, 'onInvokeFlowRespond'):
-                fn = self.onInvokeFlowRespond
+            if hasattr(inst, 'onInvokeFlowRespond'):
+                fn = inst.onInvokeFlowRespond
                 if callable(fn):
                     packInfo = PackInfo(head)
-                    txt_projectid = bytes_to_text(projectid, self.encoding)
-                    txt_param = bytes_to_text(param, self.encoding)
+                    txt_projectid = bytes_to_text(projectid, inst.encoding)
+                    txt_param = bytes_to_text(param, inst.encoding)
                     py_param = eval(txt_param)
                     if isinstance(fn, FunctionType):
-                        fn(self, packInfo, txt_projectid, invoke_id, py_param)
+                        fn(inst, packInfo, txt_projectid, invoke_id, py_param)
                     elif isinstance(fn, MethodType):
                         fn(packInfo, txt_projectid, invoke_id, py_param)
         elif ret == -1:
-            if hasattr(self, 'onInvokeFlowTimeout'):
-                fn = self.onInvokeFlowTimeout
+            if hasattr(inst, 'onInvokeFlowTimeout'):
+                fn = inst.onInvokeFlowTimeout
                 if callable(fn):
-                    txt_projectid = bytes_to_text(projectid, self.encoding)
+                    txt_projectid = bytes_to_text(projectid, inst.encoding)
                     packInfo = PackInfo(head)
                     if isinstance(fn, FunctionType):
-                        fn(self, packInfo, txt_projectid, invoke_id)
-                    elif isinstance(self, MethodType):
+                        fn(inst, packInfo, txt_projectid, invoke_id)
+                    elif isinstance(inst, MethodType):
                         fn(packInfo, txt_projectid, invoke_id)
-        
+    
+    
+    ## @name 事件
+    ## @{
+    
+    ## 连接成功事件
+    # @param self 
+    # @param unitId 实例ID
     def onConnectSuccess(self, unitId):
         pass
     
+    ## 连接失败事件
+    # @param self 
+    # @param unitId 实例ID
+    # @param errno 错误编码
     def onConnectFail(self, unitId, errno):
         pass
-    
+
+    ## 连接中断事件
+    # @param self 
+    # @param unitId 实例ID
+    # @param errno 错误编码    
     def onDisconnect(self):
         pass
     
+    ## 收到文本事件
+    # @param self 
+    # @param packInfo 数据包信息
+    # @param txt 收到的文本 
+    # @see PackInfo
     def onReceiveText(self, packInfo, txt):
         pass
     
+    ## 收到流程返回数据事件
+    # @param self 
+    # @param packInfo 数据包信息。
+    # @param project 流程所在的项目
+    # @param invokeId 调用ID。它对应于 @ref invokeFlow "invokeFlow 方法"返回的ID
+    # @param result 返回的数据。是一个Python对象。通常是一个list
+    # @see PackInfo
     def onInvokeFlowRespond(self, packInfo, project, invokeId, result):
         pass
     
+    ## 流程返回超时事件
+    # @param self 
+    # @param packInfo 数据包信息。
+    # @param project 流程所在的项目
+    # @param invokeId 调用ID。它对应于该对象的 @ref invokeFlow "invokeFlow() 方法"返回值
+    # @see PackInfo
     def onInvokeFlowTimeout(self, packInfo, project, invokeId):
         pass
     
+    ## @}
+    
+    ## 连接
+    # @param self 
+    # @param username
+    # @param password
+    # @param info
     def connect(self, username=None, password=None, info=None):
-        b_username, _ = text_to_bytes(username, self.encoding)
-        b_password, _ = text_to_bytes(password, self.encoding)
-        b_info, _ = text_to_bytes(info, self.encoding)
+        b_username = text_to_bytes(username, self.encoding)
+        b_password = text_to_bytes(password, self.encoding)
+        b_info = text_to_bytes(info, self.encoding)
         result = sbicif._c_fn_CreateConnect(c_char_p(b_username), c_char_p(b_password), c_char_p(b_info))
         if result != 0:
             raise ConnectError()
  
+    ## 发送文本
+    # @param self 
+    # @param cmd 命令
+    # @param cmdType 命令类型
+    # @param dstUnitId 目标节点ID
+    # @param dstClientId 目标客户端ID
+    # @param dstClientType 目标客户端类型
+    # @param txt 待发送文本
+    # @param encoding 文本的编码。默认为该对象的 @ref encoding "编码"属性。
     def sendText(self, cmd, cmdType, dstUnitId, dstClientId, dstClientType, txt, encoding=None):
         if not encoding:
             encoding = self.encoding
-        data, data_sz = text_to_bytes(txt, encoding)
-        result = sbicif._c_fn_SendData(c_byte(cmd), c_byte(cmdType), c_int(dstUnitId), c_int(dstClientId), c_int(dstClientType), c_char_p(data), c_int(data_sz))
+        data = text_to_bytes(txt, encoding)
+        data_sz = len(data) + 1 if data else 0
+        result = sbicif._c_fn_SendData(
+            c_byte(cmd),
+            c_byte(cmdType),
+            c_int(dstUnitId),
+            c_int(dstClientId),
+            c_int(dstClientType),
+            c_char_p(data),
+            c_int(data_sz)
+        )
         if result != 0:
-            raise SendDataError()
+            raise SendDataError('SmartBusIpcCli_SendData() returns %d' % (result))
+        
+    ## 发送二进制数据
+    # @param self 
+    # @param cmd 命令
+    # @param cmdType 命令类型
+    # @param dstUnitId 目标节点ID
+    # @param dstClientId 目标客户端ID
+    # @param dstClientType 目标客户端类型
+    # @param data 待发送数据。必须是bytes类型。
+    def sendBytes(self, cmd, cmdType, dstUnitId, dstClientId, dstClientType, data):
+        result = sbicif._c_fn_SendData(
+            c_byte(cmd),
+            c_byte(cmdType),
+            c_int(dstUnitId),
+            c_int(dstClientId),
+            c_int(dstClientType),
+            c_char_p(data),
+            c_int(len(data) if data else 0)
+        )
+        if result != 0:
+            raise SendDataError('SmartBusIpcCli_SendData() returns %d' % (result))
     
-    def invokeFlow(self, server, process, project, flow, parameters=[], isNeedReturn=True, timeout=30):
+    ## 调用流程
+    # @param self 
+    # @param server IPSC流程服务所在节点
+    # @param process IPSC进程索引值
+    # @param project 流程项目名称
+    # @param flow 流程名称
+    # @param parameters 流程传入参数
+    # @param isNeedReturn 是否需要流程返回值
+    # @param timeout 等待流程返回超时值，单位为秒。
+    # @param encoding 文本的编码。默认为该对象的 @ref encoding "编码"属性。
+    # @return 当需要等待流程返回值时，该返回值是@ref onInvokeFlowRespond "流程返回事件"中对应的ID.
+    def invokeFlow(self, server, process, project, flow, parameters=[], isNeedReturn=True, timeout=30, encoding=None):
+        if not encoding:
+            encoding = self.encoding
         c_server_unitid = c_int(server)
         c_processindex = c_int(process)
-        c_project_id = c_char_p(text_to_bytes(project, self.encoding)[0])
-        c_flowid = c_char_p(text_to_bytes(flow, self.encoding)[0])
+        c_project_id = c_char_p(text_to_bytes(project, encoding))
+        c_flowid = c_char_p(text_to_bytes(flow, encoding))
         c_invoke_mode = c_int(0) if isNeedReturn else c_int(1)
         c_timeout = c_int(int(timeout * 1000))
         if parameters is None:
             parameters = []
         else:
-            if isinstance(parameters, tuple):
-                parameters = list(parameters)
-            elif isinstance(parameters, (int, float, str, bool , dict)):
+            if isinstance(parameters, (int, float, str, bool , dict)):
                 parameters = [parameters]
-            elif not isinstance(parameters, list):
-                raise TypeError('argument "parameters" must be one of None, int, float, str, bool , dict, list, tuple')
-        c_in_valuelist = c_char_p(text_to_bytes(str(parameters), self.encoding)[0])
-        result = sbicif._c_fn_RemoteInvokeFlow(c_server_unitid, c_processindex, c_project_id, c_flowid, c_invoke_mode, c_timeout, c_in_valuelist)
-        if result != 0:
-            raise SendDataError()
+            else:
+                parameters = list(parameters)
+        c_in_valuelist = c_char_p(text_to_bytes(str(parameters), encoding))
+        result = sbicif._c_fn_RemoteInvokeFlow(
+            c_server_unitid,
+            c_processindex,
+            c_project_id,
+            c_flowid,
+            c_invoke_mode,
+            c_timeout,
+            c_in_valuelist
+        )
+        if result <= 0:
+            raise SendDataError('SmartBusIpcCli_RemoteInvokeFlow reutrns %d' % (result))
+        return  result
 
-    
+## @name 异常类
+## @{
+
+## @exception 已经初始化，无法重复的初始化
+class AlreadyInitializedError(Exception):
+    pass
+
+## @exception 尚未初始化，无法使用
+class NotInitializedError(Exception):
+    pass
+
+## @exception 对象已经存在，无法再次新建
+class AlreadyExistsError(Exception):
+    pass
+
+## @exception 连接服务器错误
+class ConnectError(Exception):
+    pass
+
+## @exception 发送数据错误
+class SendDataError(Exception):
+    pass
+
+## @}

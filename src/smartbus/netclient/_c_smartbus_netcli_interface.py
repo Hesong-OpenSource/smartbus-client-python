@@ -1,22 +1,28 @@
-'''
-Created on 2013-2-3
+# -*- coding: utf-8 -*-
 
-@author: tanbro
-'''
+##@package _c_smartbus_netcli_interface
+#smartbus 网络通信客户端C-API ctypes 对照翻译
+#
+#使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
+#
+#@date 2013-2-3
+#@author lxy@heosng.net
 
 import sys
-from ctypes import CDLL, RTLD_GLOBAL, Structure, \
-    c_byte, c_char, c_ushort, c_int, c_long, c_void_p, \
-    CFUNCTYPE, POINTER, c_char_p
+    
+from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p, c_ushort, c_long
+if sys.version_info[0] < 3:
+    from smartbus import  _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
+else:
+    from .. import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
 
-from types import FunctionType, MethodType
 
 lib_filename = None
 if 'posix' in sys.builtin_module_names:
-    lib_filename = 'libbusnetcli.so'
+    lib_filename = 'libbusipccli.so'
 elif 'nt' in sys.builtin_module_names:
     lib_filename = 'smartbus_net_cli.dll'
-    
+
 #===============================================================================
 # library
 #===============================================================================
@@ -31,34 +37,6 @@ _c_fn_SetCallBackFn = None
 _c_fn_CreateConnect = None
 _c_fn_SendData = None
 _c_fn_RemoteInvokeFlow = None
-
-#===============================================================================
-# structure
-#===============================================================================
-class _struct_PACKET_HEAD(Structure):
-    _pack_ = 1  # 设定为1字节对齐
-    _fields_ = [
-        ('head_flag', c_ushort),  # // 头标识    : 0x5b15
-        ('cmd', c_byte),
-        ('cmdtype', c_byte),
-        ('src_unit_client_type', c_char),
-        ('src_unit_id', c_char),
-        ('src_unit_client_id', c_char),
-        ('dest_unit_client_type', c_char),
-        ('dest_unit_id', c_char),
-        ('dest_unit_client_id', c_char),
-        ('reserved', c_char * 2),
-        ('packet_size', c_long),
-        ('datalen', c_long),
-    ]
-
-#===============================================================================
-# call-back function type
-#===============================================================================
-_c_fntyp_connection_cb = CFUNCTYPE(c_int, c_void_p, c_int, c_int)
-_c_fntyp_disconnect_cb = CFUNCTYPE(None, c_void_p)
-_c_fntyp_recvdata_cb = CFUNCTYPE(None, c_void_p, POINTER(_struct_PACKET_HEAD), c_void_p, c_int)
-_c_fntyp_invokeflow_ret_cb = CFUNCTYPE(None, c_void_p, c_byte, POINTER(_struct_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
 
 #===============================================================================
 # function type and param flags
@@ -78,8 +56,8 @@ _paramflags_CreateConnect = (1, 'local_clientid', c_byte), (1, 'local_clienttype
 _c_fntyp_SendData = CFUNCTYPE(c_int, c_byte, c_byte, c_byte, c_int, c_int, c_int, c_void_p, c_int)
 _paramflags_SendData = (1, 'local_clientid', c_byte), (1, 'cmd', c_byte), (1, 'cmdtype', c_byte), (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
 
-_c_fntyp_RemoteInvokeFlow = CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
-_paramflags_RemoteInvokeFlow = (1, 'server_unitid', c_int), (1, 'processindex', c_int), (1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (1, 'in_valuelist', c_char_p)
+_c_fntyp_RemoteInvokeFlow = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
+_paramflags_RemoteInvokeFlow = (1, 'local_clientid', c_byte), (1, 'server_unitid', c_int), (1, 'processindex', c_int), (1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (1, 'in_valuelist', c_char_p)
 
 #===============================================================================
 # load library function
