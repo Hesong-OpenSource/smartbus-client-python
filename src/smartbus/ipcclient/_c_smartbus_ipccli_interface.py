@@ -9,6 +9,7 @@
 #@author lxy@heosng.net
 
 import sys
+import os
 
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p
 
@@ -22,10 +23,12 @@ else:
 #在POSIX系统下，默认是libbusipccli.so。目前只有linux x86的库文件
 #在WINNT系统下，默认是busipccli.dll。@note: 目前上未支持WINDOWS。
 lib_filename = None
-if 'posix' in sys.builtin_module_names:
+if os.name in ('posix'):
     lib_filename = 'libbusipccli.so'
-elif 'nt' in sys.builtin_module_names:
+elif os.name in ("nt", "ce"):
     lib_filename = 'busipccli.dll'
+else:
+    raise NotImplementedError()
     
 ## 共享/动态库
 _lib = None

@@ -9,6 +9,7 @@
 #@author lxy@heosng.net
 
 import sys
+import os
     
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p, c_ushort, c_long
 if sys.version_info[0] < 3:
@@ -18,10 +19,13 @@ else:
 
 
 lib_filename = None
-if 'posix' in sys.builtin_module_names:
+if os.name in ('posix'):
     lib_filename = 'libbusipccli.so'
-elif 'nt' in sys.builtin_module_names:
+elif os.name in ("nt", "ce"):
     lib_filename = 'smartbus_net_cli.dll'
+else:
+    raise NotImplementedError()
+
 
 #===============================================================================
 # library

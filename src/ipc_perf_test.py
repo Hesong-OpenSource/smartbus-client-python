@@ -67,7 +67,7 @@ if __name__ == '__main__':
     client.onInvokeFlowTimeout = onInvokeFlowTimeout
     rt = client.connect()
     print('connect returns', rt)
-    
+
     while True:
         s = ''
         if sys.version_info[0] == 2:

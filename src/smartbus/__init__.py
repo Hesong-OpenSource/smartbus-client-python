@@ -3,7 +3,13 @@
 ## @package smartbus
 # smartbus.h 的Python封装
 
+import os
 from ctypes import CDLL, RTLD_GLOBAL, CFUNCTYPE, Structure, POINTER, c_byte, c_char, c_ushort, c_int, c_long, c_void_p, c_char_p
+
+if os.name in ("nt", "ce"):
+    from ctypes import WINFUNCTYPE as CALBKFUNCTYPE
+else:
+    CALBKFUNCTYPE = CFUNCTYPE
 
 ## @name 结构体
 ## @{
@@ -32,10 +38,10 @@ class _struct_PACKET_HEAD(Structure):
 ## @name 回调函数类型
 ## @{
 
-_c_fntyp_connection_cb = CFUNCTYPE(None, c_void_p, c_byte, c_int, c_int)
-_c_fntyp_disconnect_cb = CFUNCTYPE(None, c_void_p, c_byte)
-_c_fntyp_recvdata_cb = CFUNCTYPE(None, c_void_p, c_byte, POINTER(_struct_PACKET_HEAD), c_void_p, c_int)
-_c_fntyp_invokeflow_ret_cb = CFUNCTYPE(None, c_void_p, c_byte, POINTER(_struct_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
+_c_fntyp_connection_cb = CALBKFUNCTYPE(None, c_void_p, c_byte, c_int, c_int)
+_c_fntyp_disconnect_cb = CALBKFUNCTYPE(None, c_void_p, c_byte)
+_c_fntyp_recvdata_cb = CALBKFUNCTYPE(None, c_void_p, c_byte, POINTER(_struct_PACKET_HEAD), c_void_p, c_int)
+_c_fntyp_invokeflow_ret_cb = CALBKFUNCTYPE(None, c_void_p, c_byte, POINTER(_struct_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
 
 ## @}
 
