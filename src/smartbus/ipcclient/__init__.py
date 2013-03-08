@@ -11,17 +11,17 @@
 
 import os
 import sys
-from ctypes import string_at, c_char, c_byte, c_int, c_void_p, c_char_p 
+from ctypes import create_string_buffer, string_at, byref, c_char, c_byte, c_int, c_void_p, c_char_p 
 from types import FunctionType, MethodType
 
 if sys.version_info[0] < 3:
     import _c_smartbus_ipccli_interface as sbicif
     from smartbus import PackInfo
-    from smartbus.utils import default_encoding, bytes_to_text, text_to_bytes, ifnone
+    from smartbus.utils import default_encoding, bytes_to_text, text_to_bytes
 else:
     from . import _c_smartbus_ipccli_interface as sbicif
     from .. import PackInfo
-    from ..utils import default_encoding, bytes_to_text, text_to_bytes, ifnone
+    from ..utils import default_encoding, bytes_to_text, text_to_bytes
 
 ## SmartBus IPC 客户端类
 #
@@ -155,7 +155,10 @@ class Client(object):
             fn = inst.onReceiveText
             if callable(fn):
                 packInfo = PackInfo(head)
-                txt = bytes_to_text(string_at(data, size), inst.encoding)
+                txt = None
+                if data:
+                    txt = bytes_to_text(string_at(data, size), inst.encoding)
+                    txt = txt.strip('\x00')
                 if isinstance(fn, FunctionType):
                     fn(inst, packInfo, txt)
                 elif isinstance(fn, MethodType):
@@ -266,14 +269,15 @@ class Client(object):
         if not encoding:
             encoding = self.encoding
         data = text_to_bytes(txt, encoding)
-        data_sz = len(data) + 1 if data else 0
+        data_pc = create_string_buffer(data) if data else None
+        data_sz = len(data_pc) if data_pc else 0
         result = sbicif._c_fn_SendData(
             c_byte(cmd),
             c_byte(cmdType),
             c_int(dstUnitId),
             c_int(dstClientId),
             c_int(dstClientType),
-            c_char_p(data),
+            byref(data_pc),
             c_int(data_sz)
         )
         if result != 0:
