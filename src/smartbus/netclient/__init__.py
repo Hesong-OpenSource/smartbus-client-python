@@ -28,9 +28,10 @@ class Client(object):
     def __init__(self, localClientId, localClientType, masterHost, masterPort, slaverHost=None, slaverPort=0, authorUsr=None, authorPwd=None, extInfo=None, encoding=default_encoding):
         if not Client.isInitialized():
             raise NotInitializedError()
-        if localClientId in self.__instances:
+        cls = type(self)
+        if localClientId in cls.__instances:
             raise AlreadyExistsError()
-        self.__instances[localClientId] = self
+        cls.__instances[localClientId] = self
         self.__localClientId = localClientId
         self.__localClientType = localClientType
         self.__masterHost = masterHost
@@ -50,9 +51,6 @@ class Client(object):
         self.__c_authorUsr = c_char_p(text_to_bytes(self.__authorUsr, self.encoding))
         self.__c_authorPwd = c_char_p(text_to_bytes(self.__authorPwd, self.encoding))
         self.__c_extInfo = c_char_p(text_to_bytes(self.__extInfo, self.encoding))
-
-    def __del__(self):
-        self.__instances.pop(self.__localClientId, None)
 
     @classmethod
     def initialize(cls, unitid, libraryfile=sbncif.lib_filename):
@@ -89,9 +87,7 @@ class Client(object):
 
     @classmethod
     def finalize(cls):
-        while len(cls.__instances):
-            _, inst = cls.__instances.popitem()
-            del inst
+        cls.__instances.clear()
         if cls.__unitid is not None:
             sbncif._c_fn_Release()
             cls.__unitid = None
@@ -233,6 +229,9 @@ class Client(object):
     def onInvokeFlowTimeout(self, packInfo, project, invokeId):
         pass
 
+    def dispose(self):
+        cls = type(self)
+        cls.__instances.pop(self.__localClientId, None)
 
     ##
     #@param local_clientid 本地clientid, >= 0 and <= 255
@@ -259,6 +258,7 @@ class Client(object):
         if result != 0:
             raise ConnectError()
         return result
+        pass
 
     def sendText(self, cmd, cmdType, dstUnitId, dstClientId, dstClientType, txt, encoding=None):
         if not encoding:
