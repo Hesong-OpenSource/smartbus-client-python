@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+
 ## @package smartbus.utils
 # 辅助功能
 #@date 2013-3-4
@@ -11,6 +13,10 @@ default_encoding = sys.getfilesystemencoding()
 
 ## 如果第一个参数为None，则返回第二个参数，否则返回第一个参数
 #
+# @param a 第一个参数
+# @param b 第二个参数
+# @return 如果 a 为 None，则返回 b，否则返回 a。
+#
 # 相当于：
 ## @code
 #def ifnone(a, b):
@@ -19,11 +25,8 @@ default_encoding = sys.getfilesystemencoding()
 #    else:
 #        return a
 ## @endcode
-# @param a 第一个参数
-# @param b 第二个参数
-# @return 返回值
 #
-# 例如： 
+# 例如：
 ## @code
 #v1 = 1
 #v2 = 2
@@ -39,31 +42,39 @@ default_encoding = sys.getfilesystemencoding()
 #那么，返回值为2。
 ifnone = lambda a, b: b if a is None else a
 
-## 将unicode文本转为字节数组
-# @param txt 要转换的文本
-# @param encoding 转化所使用的编码
-# @return 转换后的字节数组
-def text_to_bytes(txt, encoding=default_encoding):
-    data = None
-    if txt is not None:
-        if sys.version_info[0] < 3:
-            import types
-            if type(txt) == types.StringType:
-                data = txt
-            elif type(txt) == types.UnicodeType:
-                data = txt.encode(encoding)
-            else:
-                raise TypeError('argument "text" must be StringType or UnicodeType')
+def to_str(data, encoding=default_encoding):
+    if data is None:
+        return data
+    if sys.version_info[0] < 3:
+        if isinstance(data, str):
+            return data
+        elif isinstance(data, unicode):
+            return data.encode(encoding)
         else:
-            data = txt.encode(encoding)
-    return data
+            raise TypeError()
+    else:
+        if isinstance(data, str):
+            return data
+        elif isinstance(data, bytes):
+            return data.decode(encoding)
+        else:
+            raise TypeError()
 
-## 将字节数组转为unicode文本
-# @param data 要转换的字节数组
-# @param encoding 转化所使用的编码
-# @return 转换后的unicode文本
-def bytes_to_text(data, encoding=default_encoding):
-    txt = None
-    if data is not None:
-        txt = data.decode(encoding)
-    return txt
+def to_bytes(data, encoding=default_encoding):
+    if data is None:
+        return data
+    if sys.version_info[0] < 3:
+        if isinstance(data, str):
+            return data
+        elif isinstance(data, unicode):
+            return data.encode(encoding)
+        else:
+            raise TypeError()
+    else:
+        if isinstance(data, str):
+            return data.encode(encoding)
+        elif isinstance(data, bytes):
+            return data
+        else:
+            raise TypeError()
+
