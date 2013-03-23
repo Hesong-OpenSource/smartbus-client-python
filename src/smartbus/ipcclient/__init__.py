@@ -124,70 +124,43 @@ class Client(object):
         inst = cls.__instance
         if ack == 0:  # 连接成功
             if hasattr(inst, 'onConnectSuccess'):
-                fn = inst.onConnectSuccess
-                if isinstance(fn, FunctionType):
-                    fn(inst, accesspoint_unitid)
-                elif isinstance(fn, MethodType):
-                    fn(accesspoint_unitid)
+                inst.onConnectSuccess(accesspoint_unitid)
         else:  # 连接失败
             if hasattr(inst, 'onConnectFail'):
-                fn = inst.onConnectFail
-                if isinstance(fn, FunctionType):
-                    fn(inst, accesspoint_unitid, ack)
-                elif isinstance(fn, MethodType):
-                    fn(accesspoint_unitid, ack)
+                inst.onConnectFail(accesspoint_unitid, ack)
 
     @classmethod
     def __disconnect_cb(cls, param, local_clientid):
         inst = cls.__instance
         if hasattr(inst, 'onDisconnect'):
-            fn = inst.onDisconnect
-            if isinstance(fn, FunctionType):
-                fn(inst)
-            elif isinstance(fn, MethodType):
-                fn()
+            inst.onDisconnect()
 
     @classmethod
     def __recvdata_cb(cls, param, local_clientid, head, data, size):
         inst = cls.__instance
         if hasattr(inst, 'onReceiveText'):
-            fn = inst.onReceiveText
-            if callable(fn):
-                packInfo = PackInfo(head)
-                txt = None
-                if data:
-                    txt = to_str(string_at(data, size), inst.encoding)
-                    txt = txt.strip('\x00')
-                if isinstance(fn, FunctionType):
-                    fn(inst, packInfo, txt)
-                elif isinstance(fn, MethodType):
-                    fn(packInfo, txt)
+            packInfo = PackInfo(head)
+            txt = None
+            if data:
+                txt = to_str(string_at(data, size), inst.encoding)
+                txt = txt.strip('\x00')
+                inst.onReceiveText(packInfo, txt)
 
     @classmethod
     def __invokeflow_ret_cb(cls, arg, local_clientid, head, projectid, invoke_id, ret, param):
         inst = cls.__instance
         if ret == 1:
             if hasattr(inst, 'onInvokeFlowRespond'):
-                fn = inst.onInvokeFlowRespond
-                if callable(fn):
-                    packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid, inst.encoding)
-                    txt_param = to_str(param, inst.encoding)
-                    py_param = eval(txt_param)
-                    if isinstance(fn, FunctionType):
-                        fn(inst, packInfo, txt_projectid, invoke_id, py_param)
-                    elif isinstance(fn, MethodType):
-                        fn(packInfo, txt_projectid, invoke_id, py_param)
+                packInfo = PackInfo(head)
+                txt_projectid = to_str(projectid, inst.encoding)
+                txt_param = to_str(param, inst.encoding)
+                py_param = eval(txt_param)
+                inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
         elif ret == -1:
             if hasattr(inst, 'onInvokeFlowTimeout'):
-                fn = inst.onInvokeFlowTimeout
-                if callable(fn):
-                    txt_projectid = to_str(projectid, inst.encoding)
-                    packInfo = PackInfo(head)
-                    if isinstance(fn, FunctionType):
-                        fn(inst, packInfo, txt_projectid, invoke_id)
-                    elif isinstance(inst, MethodType):
-                        fn(packInfo, txt_projectid, invoke_id)
+                txt_projectid = to_str(projectid, inst.encoding)
+                packInfo = PackInfo(head)
+                inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
 
 
     ## @name 事件

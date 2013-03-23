@@ -20,7 +20,7 @@ else:
 
 lib_filename = None
 if os.name in ('posix'):
-    lib_filename = 'libbusipccli.so'
+    lib_filename = 'libbusnetcli.so'
 elif os.name in ("nt", "ce"):
     lib_filename = 'smartbus_net_cli.dll'
 else:
