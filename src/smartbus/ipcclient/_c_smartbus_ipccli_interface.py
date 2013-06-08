@@ -8,15 +8,13 @@
 #@date 2013-1-28
 #@author lxy@heosng.net
 
-import sys
+from __future__ import absolute_import
+
 import os
 
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p
 
-if sys.version_info[0] < 3:
-    from smartbus import  _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
-else:
-    from .. import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
+from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
 
 ## smartbus IPC 客户端默认的共享/动态库文件名 
 #
@@ -42,6 +40,7 @@ _c_fn_SetCallBackFn = None
 _c_fn_CreateConnect = None
 _c_fn_SendData = None
 _c_fn_RemoteInvokeFlow = None
+_c_fn_SendPing = None
 
 ## @}
 
@@ -66,6 +65,9 @@ _paramflags_SendData = (1, 'cmd', c_byte), (1, 'cmdtype', c_byte), (1, 'dst_unit
 _c_fntyp_RemoteInvokeFlow = CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
 _paramflags_RemoteInvokeFlow = (1, 'server_unitid', c_int), (1, 'processindex', c_int), (1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (1, 'in_valuelist', c_char_p)
 
+_c_fntyp_SendPing = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_int, c_void_p, c_int)
+_paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
+
 ## @}
 
 ## 加载共享/动态库
@@ -87,5 +89,7 @@ def load_lib(filepath=lib_filename):
         _c_fn_SendData = _c_fntyp_SendData(('SmartBusIpcCli_SendData', _lib), _paramflags_SendData)
         global _c_fn_RemoteInvokeFlow
         _c_fn_RemoteInvokeFlow = _c_fntyp_RemoteInvokeFlow(('SmartBusIpcCli_RemoteInvokeFlow', _lib), _paramflags_RemoteInvokeFlow)
+        global _c_fn_SendPing
+        _c_fn_SendPing = _c_fntyp_SendPing(('SmartBusIpcCli_SendPing', _lib), _paramflags_SendPing)
 
     return _lib

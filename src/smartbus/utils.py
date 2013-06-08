@@ -42,39 +42,36 @@ default_encoding = sys.getfilesystemencoding()
 #那么，返回值为2。
 ifnone = lambda a, b: b if a is None else a
 
-def to_str(data, encoding=default_encoding):
-    if data is None:
-        return data
-    if sys.version_info[0] < 3:
-        if isinstance(data, str):
-            return data
-        elif isinstance(data, unicode):
-            return data.encode(encoding)
+if sys.version_info[0] < 3:
+    def to_bytes(s, encoding=default_encoding):
+        if isinstance(s, (str, type(None))):
+            return s
+        elif isinstance(s, unicode):
+            return s.encode(encoding)
         else:
             raise TypeError()
-    else:
-        if isinstance(data, str):
-            return data
-        elif isinstance(data, bytes):
-            return data.decode(encoding)
+    def to_unicode(s, encoding=default_encoding):
+        if isinstance(s, (unicode, type(None))):
+            return s
+        elif isinstance(s, str):
+            return s.decode(encoding)
         else:
             raise TypeError()
-
-def to_bytes(data, encoding=default_encoding):
-    if data is None:
-        return data
-    if sys.version_info[0] < 3:
-        if isinstance(data, str):
-            return data
-        elif isinstance(data, unicode):
-            return data.encode(encoding)
+    to_str = to_bytes
+else:
+    unicode = str
+    def to_bytes(s, encoding=default_encoding):
+        if isinstance(s, (bytes, type(None))):
+            return s
+        elif isinstance(s, str):
+            return s.encode(encoding)
         else:
             raise TypeError()
-    else:
-        if isinstance(data, str):
-            return data.encode(encoding)
-        elif isinstance(data, bytes):
-            return data
+    def to_unicode(s, encoding=default_encoding):
+        if isinstance(s, (str, type(None))):
+            return s
+        elif isinstance(s, bytes):
+            return s.decode(encoding)
         else:
             raise TypeError()
-
+    to_str = to_unicode
