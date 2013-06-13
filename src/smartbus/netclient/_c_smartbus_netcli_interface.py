@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-##@package _c_smartbus_netcli_interface
+##@package smartbus.netclient._c_smartbus_netcli_interface
 #smartbus 网络通信客户端C-API ctypes 对照翻译
 #
 #使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
@@ -15,7 +15,10 @@ from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char
 
 from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
 
-lib_filename = None
+## smartbus IPC 客户端默认的共享/动态库文件名 
+#
+#在POSIX系统下，默认是 libbusnetcli.so。@note: 目前只有linux x86的库文件。
+#在WINNT系统下，默认是 smartbus_net_cli.dll。@note: 目前只有windows x86的动态库。
 if os.name in ('posix'):
     lib_filename = 'libbusnetcli.so'
 elif os.name in ("nt", "ce"):

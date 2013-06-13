@@ -1,6 +1,6 @@
 #-*- coding: utf-8 -*-
 
-##@package _c_smartbus_ipccli_interface
+##@package smartbus.ipcclient._c_smartbus_ipccli_interface
 #smartbus 进程通信客户端C-API ctypes 对照翻译
 #
 #使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
@@ -18,13 +18,12 @@ from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fnt
 
 ## smartbus IPC 客户端默认的共享/动态库文件名 
 #
-#在POSIX系统下，默认是libbusipccli.so。目前只有linux x86的库文件
-#在WINNT系统下，默认是busipccli.dll。@note: 目前上未支持WINDOWS。
-lib_filename = None
+#在POSIX系统下，默认是 libbusipccli.so。@note: 目前只有linux x86的库文件。
+#在WINNT系统下，默认是 busipccli.dll。@note: 目前尚不支持WINDOWS。
 if os.name in ('posix'):
     lib_filename = 'libbusipccli.so'
 elif os.name in ("nt", "ce"):
-    lib_filename = 'busipccli.dll'
+    lib_filename = 'smartbus_ipc_cli.dll'
 else:
     raise NotImplementedError()
     
