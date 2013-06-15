@@ -10,6 +10,8 @@ from __future__ import absolute_import
 import os
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_void_p, c_char_p
 
+import json
+
 from . import _c_smartbus_ipccli_interface as sbicif
 from .._c_smartbus import PackInfo
 from ..utils import default_encoding, to_str, to_bytes
@@ -146,7 +148,7 @@ class Client(object):
                 packInfo = PackInfo(head)
                 txt_projectid = to_str(projectid, inst.encoding)
                 txt_param = to_str(param, inst.encoding)
-                py_param = eval(txt_param)
+                py_param = json.loads(txt_param)
                 inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
         elif ret == -1:
             if callable(inst.onInvokeFlowTimeout):
