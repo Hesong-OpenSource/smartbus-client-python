@@ -162,7 +162,7 @@ class Client(object):
                     packInfo = PackInfo(head)
                     txt_projectid = to_str(projectid, inst.encoding)
                     txt_param = to_str(param, inst.encoding)
-                    py_param = json.loads(txt_param)
+                    py_param = json.loads(txt_param, encoding=inst.encoding)
                     inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
             elif ret == -1:
                 if hasattr(inst, 'onInvokeFlowTimeout'):
