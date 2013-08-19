@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import
 
+import sys
 import os
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_void_p, c_char_p
 
@@ -28,11 +29,17 @@ class Client(object):
     # @param self
     # @param encoding 收/发字符串时使用的编码。默认为 @ref smartbus.utils.default_encoding
     # @see encoding
-    def __init__(self, encoding=default_encoding):
+    def __init__(self, username=None, password=None, extInfo=None, encoding=default_encoding):
         ## 编码
         #
         # 收/发字符串时使用该编码进行编解码处理。该属性由构造函数的encoding参数指定
+        self.__username = username
+        self.__password = password
+        self.__extInfo = extInfo
         self.encoding = encoding
+        self._c_username = to_bytes(self.__username, self.encoding)
+        self._c_password = to_bytes(self.__password, self.encoding)
+        self.__c_extInfo = c_char_p(to_bytes(self.__extInfo, self.encoding))
         cls = type(self)
         if not cls.__lib:
             raise errors.NotInitializedError()
@@ -52,7 +59,7 @@ class Client(object):
     # @param clienttype 客户端类型。
     # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、当前目录、运行目录、文件目录。@see _c_smartbus_ipccli_interface.lib_filename
     @classmethod
-    def initialize(cls, clientid, clienttype, libraryfile=sbicif.lib_filename):
+    def initialize(cls, clientid, clienttype, onglobalconnect=None, libraryfile=sbicif.lib_filename):
         if cls.__lib:
             raise errors.AlreadyInitializedError()
         if not libraryfile:
@@ -71,16 +78,19 @@ class Client(object):
                     except:
                         raise
 
-        sbicif._c_fn_Init(clienttype, clientid)
+        errors.check_restval(sbicif._c_fn_Init(clienttype, clientid))
         cls.__c_fn_connection_cb = sbicif._c_fntyp_connection_cb(cls.__connection_cb)
         cls.__c_fn_recvdata_cb = sbicif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
         cls.__c_fn_disconnect_cb = sbicif._c_fntyp_disconnect_cb(cls.__disconnect_cb)
         cls.__c_fn_invokeflow_ret_cb = sbicif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ret_cb)
+        cls.__c_fn_global_connect_cb = sbicif._c_fntyp_global_connect_cb(cls.__global_connect_cb)
+        cls.__onglobalconnect = onglobalconnect
         sbicif._c_fn_SetCallBackFn(
             cls.__c_fn_connection_cb,
             cls.__c_fn_recvdata_cb,
             cls.__c_fn_disconnect_cb,
             cls.__c_fn_invokeflow_ret_cb,
+            cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
 
@@ -107,11 +117,11 @@ class Client(object):
     #
     # 由于一个进程只能有一个实例，所以可用该方法返回目前的实例。
     @classmethod
-    def instance(cls):
+    def instance(cls, username=None, password=None, extInfo=None):
         if cls.__instance:
             return cls.__instance
         else:
-            return Client()
+            return Client(username, password, extInfo)
 
     @classmethod
     def __connection_cb(cls, arg, local_clientid, accesspoint_unitid, ack):
@@ -156,6 +166,17 @@ class Client(object):
                 packInfo = PackInfo(head)
                 inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
 
+    @classmethod
+    def __global_connect_cb(cls, arg, unitid, clientid, clienttype, status, ext_info):
+        if callable(cls.__onglobalconnect):
+            if sys.version_info[0] < 3:
+                if len(cls.__instances) > 0:
+                    for v in cls.__instances.values():
+                        inst = v
+                        break
+                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
+            else:
+                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
 
     ## @name 事件
     ## @{
@@ -216,13 +237,9 @@ class Client(object):
     # @param username
     # @param password
     # @param info
-    def connect(self, username=None, password=None, info=None):
-        b_username = to_bytes(username, self.encoding)
-        b_password = to_bytes(password, self.encoding)
-        b_info = to_bytes(info, self.encoding)
-        result = sbicif._c_fn_CreateConnect(c_char_p(b_username), c_char_p(b_password), c_char_p(b_info))
-        if result != 0:
-            raise errors.ConnectError('SmartBusIpcCli_CreateConnect returns {}'.format(result))
+    def connect(self, username=None, password=None):
+        result = sbicif._c_fn_CreateConnect(self._c_username, self._c_password, self.__c_extInfo)
+        errors.check_restval(result)
 
     ## 发送数据
     # @param self
@@ -246,8 +263,7 @@ class Client(object):
             byref(data_pc),
             c_int(data_sz)
         )
-        if result != 0:
-            raise errors.SendError('SmartBusIpcCli_SendData() returns {}'.format(result))
+        errors.check_restval(result)
 
     ## 调用流程
     #
@@ -288,8 +304,7 @@ class Client(object):
             c_timeout,
             c_in_valuelist
         )
-        if result <= 0:
-            raise errors.SendError('SmartBusIpcCli_RemoteInvokeFlow reutrns {}'.foramt(result))
+        errors.check_restval(result)
         return  result
 
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
@@ -304,5 +319,4 @@ class Client(object):
             byref(data_pc),
             c_int(data_sz)
         )
-        if result != 0:
-            raise errors.SendError('SmartBusIpcCli_SendPing() returns {}'.format(result))
+        errors.check_restval(result)

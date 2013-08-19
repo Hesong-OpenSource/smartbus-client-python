@@ -7,13 +7,14 @@
 
 from __future__ import absolute_import
 
+import sys
 import os
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_long, c_ushort, c_void_p, c_char_p
 
 import json
 
 from . import _c_smartbus_netcli_interface as sbncif
-from .._c_smartbus import PackInfo
+from .._c_smartbus import PackInfo, MIN_SMARTBUS_NETCLI_UNITID, MAX_SMARTBUS_NODE_NUM, SMARTBUS_ERR_OK
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
@@ -24,6 +25,7 @@ class Client(object):
     __lib = None
     __unitid = None
     __instances = {}
+    __onglobalconnect = None
 
     ## 构造函数
     #
@@ -72,9 +74,11 @@ class Client(object):
     # @param unitid 单元ID。在所连接到的SmartBus服务器上，每个客户端进程的单元ID都必须是全局唯一的。
     # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、当前目录、运行目录、文件目录。@see _c_smartbus_netcli_interface.lib_filename
     @classmethod
-    def initialize(cls, unitid, libraryfile=sbncif.lib_filename):
+    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename):
         if cls.__unitid is not None:
             raise errors.AlreadyInitializedError()
+#        if not isinstance(unitid, int):
+#            raise TypeError('The argument "unit" should be an integer')
         if not libraryfile:
             libraryfile = sbncif.lib_filename
         try:
@@ -90,17 +94,20 @@ class Client(object):
                         cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(__file__), libraryfile))
                     except:
                         raise
-        sbncif._c_fn_Init(unitid)
+        errors.check_restval(sbncif._c_fn_Init(unitid))
         cls.__unitid = unitid
+        cls.__onglobalconnect = onglobalconnect
         cls.__c_fn_connection_cb = sbncif._c_fntyp_connection_cb(cls.__connection_cb)
         cls.__c_fn_recvdata_cb = sbncif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
         cls.__c_fn_disconnect_cb = sbncif._c_fntyp_disconnect_cb(cls.__disconnect_cb)
         cls.__c_fn_invokeflow_ret_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ret_cb)
+        cls.__c_fn_global_connect_cb = sbncif._c_fntyp_global_connect_cb(cls.__global_connect_cb)
         sbncif._c_fn_SetCallBackFn(
             cls.__c_fn_connection_cb,
             cls.__c_fn_recvdata_cb,
             cls.__c_fn_disconnect_cb,
             cls.__c_fn_invokeflow_ret_cb,
+            cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
 
@@ -126,7 +133,7 @@ class Client(object):
     def __connection_cb(cls, arg, local_clientid, accesspoint_unitid, ack):
         inst = cls.__instances.get(local_clientid, None)
         if inst is not None:
-            if ack == 0:  # 连接成功
+            if ack == SMARTBUS_ERR_OK:  # 连接成功
                 if hasattr(inst, 'onConnectSuccess'):
                     inst.onConnectSuccess(accesspoint_unitid)
             else:  # 连接失败
@@ -169,6 +176,18 @@ class Client(object):
                     txt_projectid = to_str(projectid, inst.encoding)
                     packInfo = PackInfo(head)
                     inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
+                    
+    @classmethod
+    def __global_connect_cb(cls, arg, unitid, clientid, clienttype, status, ext_info):
+        if callable(cls.__onglobalconnect):
+            if sys.version_info[0] < 3:
+                if len(cls.__instances) > 0:
+                    for v in cls.__instances.values():
+                        inst = v
+                        break                 
+                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
+            else:
+                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
 
     ## 客户端ID
     # @param self
@@ -297,8 +316,7 @@ class Client(object):
             self.__c_authorPwd,
             self.__c_extInfo
         )
-        if result != 0:
-            raise errors.ConnectError('SmartBusNetCli_CreateConnect returns {}'.format(result))
+        errors.check_restval(result)
 
     ## 发送数据
     #
@@ -325,8 +343,7 @@ class Client(object):
             byref(data_pc),
             c_int(data_sz)
         )
-        if result != 0:
-            raise errors.SendError('SmartBusNetCli_SendData() returns {}'.format(result))
+        errors.check_restval(result)
 
     ## 调用流程
     #
@@ -367,8 +384,7 @@ class Client(object):
             c_timeout,
             c_in_valuelist
         )
-        if result <= 0:
-            raise errors.SendError('SmartBusNetCli_RemoteInvokeFlow reutrns {}'.format(result))
+        errors.check_restval(result)
         return result
     
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
@@ -383,5 +399,4 @@ class Client(object):
             byref(data_pc),
             c_int(data_sz)
         )
-        if result != 0:
-            raise errors.SendError('SmartBusNetCli_SendPing() returns {}'.format(result))
+        errors.check_restval(result)

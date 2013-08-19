@@ -8,8 +8,13 @@
 
 import sys
 
+if sys.version_info[0] < 3:
+    __all__ = ['default_encoding', 'ifnone', 'to_bytes', 'to_unicode', 'to_str']
+else:
+    __all__ = ['default_encoding', 'ifnone', 'unicode', 'to_bytes', 'to_unicode', 'to_str']
+
 ## 默认编码。默认为操作系统的编码
-default_encoding = sys.getfilesystemencoding()
+default_encoding = sys.getdefaultencoding()
 
 ## 如果第一个参数为None，则返回第二个参数，否则返回第一个参数
 #

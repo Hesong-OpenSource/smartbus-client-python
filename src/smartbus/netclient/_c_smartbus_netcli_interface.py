@@ -13,7 +13,7 @@ from __future__ import absolute_import
 import os
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p, c_ushort, c_long
 
-from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb
+from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb
 
 ## smartbus IPC 客户端默认的共享/动态库文件名 
 #
@@ -52,8 +52,8 @@ _paramflags_Init = (1, 'unitid', 0),
 _c_fntyp_Release = CFUNCTYPE(None)
 _paramflags_Release = ()
 
-_c_fntyp_SetCallBackFn = CFUNCTYPE(None, _c_fntyp_connection_cb, _c_fntyp_recvdata_cb, _c_fntyp_disconnect_cb, _c_fntyp_invokeflow_ret_cb, c_void_p)
-_paramflags_SetCallBackFn = (1, 'client_conn_cb', _c_fntyp_connection_cb), (1, 'recv_cb', _c_fntyp_recvdata_cb), (1, 'disconnect_cb', _c_fntyp_disconnect_cb), (1, 'invokeflow_ret_cb', _c_fntyp_invokeflow_ret_cb), (1, 'arg', c_void_p)
+_c_fntyp_SetCallBackFn = CFUNCTYPE(None, _c_fntyp_connection_cb, _c_fntyp_recvdata_cb, _c_fntyp_disconnect_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, c_void_p)
+_paramflags_SetCallBackFn = (1, 'client_conn_cb', _c_fntyp_connection_cb), (1, 'recv_cb', _c_fntyp_recvdata_cb), (1, 'disconnect_cb', _c_fntyp_disconnect_cb), (1, 'invokeflow_ret_cb', _c_fntyp_invokeflow_ret_cb), (1, 'global_connect_cb', _c_fntyp_global_connect_cb), (1, 'arg', c_void_p)
 
 _c_fntyp_CreateConnect = CFUNCTYPE(c_int, c_byte , c_long, c_char_p, c_ushort, c_char_p, c_ushort, c_char_p, c_char_p, c_char_p)
 _paramflags_CreateConnect = (1, 'local_clientid', c_byte), (1, 'local_clienttype', c_long), (1, 'masterip', c_char_p), (1, 'masterport', c_ushort), (1, 'slaveip', c_char_p), (1, 'slaveport', c_ushort), (1, 'author_username', c_char_p), (1, 'author_pwd', c_char_p), (1, 'add_info', c_char_p)
