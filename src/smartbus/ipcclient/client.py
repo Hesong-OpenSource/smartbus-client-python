@@ -1,6 +1,6 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-## @package smartbus.ipcclient.client
+# # @package smartbus.ipcclient.client
 # smartbus 进程间通信客户端的Python接口类客户端类型
 # @author lxy@hesong.net
 # @date 2013-6-8
@@ -18,19 +18,19 @@ from .._c_smartbus import PackInfo
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
-## SmartBus IPC 客户端类
+# # SmartBus IPC 客户端类
 #
 # 这个类封装了 SmartBus IPC 客户端的一系列方法与事件
 class Client(object):
     __lib = None
     __instance = None
 
-    ## 构造函数
+    # # 构造函数
     # @param self
     # @param encoding 收/发字符串时使用的编码。默认为 @ref smartbus.utils.default_encoding
     # @see encoding
     def __init__(self, username=None, password=None, extInfo=None, encoding=default_encoding):
-        ## 编码
+        # # 编码
         #
         # 收/发字符串时使用该编码进行编解码处理。该属性由构造函数的encoding参数指定
         self.__username = username
@@ -51,7 +51,7 @@ class Client(object):
         cls = type(self)
         cls.__instance = None
 
-    ## 初始化
+    # # 初始化
     #
     # 调用其他方法前，必须首先初始化库
     # @param cls 类
@@ -74,7 +74,7 @@ class Client(object):
                     cls.__lib = sbicif.load_lib(os.path.join(os.getcwd(), libraryfile))
                 except:
                     try:
-                        cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(__file__), libraryfile))
+                        cls.__lib = sbicif.load_lib(os.path.join(os.path.abspath(__file__), libraryfile))
                     except:
                         raise
 
@@ -94,7 +94,7 @@ class Client(object):
             c_void_p(None)
         )
 
-    ## 释放库
+    # # 释放库
     # @param cls 类
     @classmethod
     def finalize(cls):
@@ -105,7 +105,7 @@ class Client(object):
             sbicif._c_fn_Release()
             cls.__lib = None
 
-    ## 判断是否初始化
+    # # 判断是否初始化
     #
     # @param cls 类
     # @return 布尔型返回值
@@ -113,7 +113,7 @@ class Client(object):
     def isInitialized(cls):
         return cls.__lib is not None
 
-    ## 返回该类型的实例
+    # # 返回该类型的实例
     #
     # 由于一个进程只能有一个实例，所以可用该方法返回目前的实例。
     @classmethod
@@ -178,30 +178,30 @@ class Client(object):
             else:
                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
 
-    ## @name 事件
-    ## @{
+    # # @name 事件
+    # # @{
 
-    ## 连接成功事件
+    # # 连接成功事件
     # @param self
     # @param unitId 单元ID
     def onConnectSuccess(self, unitId):
         pass
 
-    ## 连接失败事件
+    # # 连接失败事件
     # @param self
     # @param unitId 单元ID
     # @param errno 错误编码
     def onConnectFail(self, unitId, errno):
         pass
 
-    ## 连接中断事件
+    # # 连接中断事件
     # @param self
     # @param unitId 单元ID
     # @param errno 错误编码
     def onDisconnect(self):
         pass
 
-    ## 收到文本事件
+    # # 收到文本事件
     # @param self
     # @param packInfo 数据包信息
     # @param txt 收到的文本
@@ -209,7 +209,7 @@ class Client(object):
     def onReceiveText(self, packInfo, txt):
         pass
 
-    ## 收到流程返回数据事件
+    # # 收到流程返回数据事件
     # @param self
     # @param packInfo 数据包信息。
     # @param project 流程所在的项目
@@ -219,7 +219,7 @@ class Client(object):
     def onInvokeFlowRespond(self, packInfo, project, invokeId, result):
         pass
 
-    ## 流程返回超时事件
+    # # 流程返回超时事件
     # @param self
     # @param packInfo 数据包信息。
     # @param project 流程所在的项目
@@ -228,9 +228,9 @@ class Client(object):
     def onInvokeFlowTimeout(self, packInfo, project, invokeId):
         pass
 
-    ## @}
+    # # @}
 
-    ## 连接服务器
+    # # 连接服务器
     #
     # 如果连接失败，则抛出 @ref ConnectError 异常。
     # @param self
@@ -241,7 +241,7 @@ class Client(object):
         result = sbicif._c_fn_CreateConnect(self._c_username, self._c_password, self.__c_extInfo)
         errors.check_restval(result)
 
-    ## 发送数据
+    # # 发送数据
     # @param self
     # @param cmd 命令
     # @param cmdType 命令类型
@@ -265,7 +265,7 @@ class Client(object):
         )
         errors.check_restval(result)
 
-    ## 调用流程
+    # # 调用流程
     #
     # 如果连接失败，则抛出 @ref SendDataError 异常
     # @param self
@@ -304,8 +304,11 @@ class Client(object):
             c_timeout,
             c_in_valuelist
         )
-        errors.check_restval(result)
-        return  result
+        if result < 0:
+            errors.check_restval(result)
+        elif result == 0:
+            raise errors.InvokeFlowIdError()
+        return result
 
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
         data = to_bytes(data, encoding if encoding else self.encoding)

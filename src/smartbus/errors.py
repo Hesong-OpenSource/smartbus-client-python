@@ -46,6 +46,9 @@ class NotInitializedError(Exception):
 class AlreadyExistsError(Exception):
     pass
 
+class InvokeFlowIdError(Exception):
+    pass
+
 ## @}
 
 class SmartBusError(Exception):
@@ -56,11 +59,12 @@ class SmartBusError(Exception):
 
 def check_restval(code, raise_if_err=True):
     if code != SMARTBUS_ERR_OK:
-        if code not in error_code_message:
-            code = SMARTBUS_ERR_OTHER
-        msg = error_code_message[code]
-        excp = SmartBusError(code, msg)
+        try:
+            msg = error_code_message[code]
+        except KeyError:
+            msg = 'UNDEFINED_ERROR'
+        smartbus_err = SmartBusError(code, msg)
         if raise_if_err:
-            raise excp
+            raise smartbus_err
         else:
-            return excp
+            return smartbus_err

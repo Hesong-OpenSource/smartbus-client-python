@@ -1,6 +1,6 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-## @package smartbus.netclient.client
+# # @package smartbus.netclient.client
 # smartbus 网络通信客户端的Python接口类客户端类型
 # @author lxy@hesong.net
 # @date 2013-6-8
@@ -18,7 +18,7 @@ from .._c_smartbus import PackInfo, MIN_SMARTBUS_NETCLI_UNITID, MAX_SMARTBUS_NOD
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
-## SmartBus Network 客户端类
+# # SmartBus Network 客户端类
 #
 # 这个类封装了 SmartBus Network 客户端的一系列方法与事件
 class Client(object):
@@ -27,7 +27,7 @@ class Client(object):
     __instances = {}
     __onglobalconnect = None
 
-    ## 构造函数
+    # # 构造函数
     #
     # @param localClientId 客户端的ID
     # @param localClientType 客户端的类型标志
@@ -67,7 +67,7 @@ class Client(object):
         self.__c_authorPwd = c_char_p(to_bytes(self.__authorPwd, self.encoding))
         self.__c_extInfo = c_char_p(to_bytes(self.__extInfo, self.encoding))
 
-    ## 初始化
+    # # 初始化
     #
     # 调用其他方法前，必须首先初始化库
     # @param cls
@@ -91,7 +91,7 @@ class Client(object):
                     cls.__lib = sbncif.load_lib(os.path.join(os.getcwd(), libraryfile))
                 except:
                     try:
-                        cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(__file__), libraryfile))
+                        cls.__lib = sbncif.load_lib(os.path.join(os.path.abspath(__file__), libraryfile))
                     except:
                         raise
         errors.check_restval(sbncif._c_fn_Init(unitid))
@@ -111,7 +111,7 @@ class Client(object):
             c_void_p(None)
         )
 
-    ## 释放库
+    # # 释放库
     #
     # @param cls
     @classmethod
@@ -147,7 +147,7 @@ class Client(object):
             if hasattr(inst, 'onDisconnect'):
                 inst.onDisconnect()
 
-    ## @todo: TODO: 广播的处理
+    # # @todo: TODO: 广播的处理
     @classmethod
     def __recvdata_cb(cls, param, local_clientid, head, data, size):
         inst = cls.__instances.get(local_clientid, None)
@@ -189,85 +189,85 @@ class Client(object):
             else:
                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
 
-    ## 客户端ID
+    # # 客户端ID
     # @param self
     @property
     def localClientId(self):
         return self.__localClientId
 
-    ## 客户端类型
+    # # 客户端类型
     # @param self
     @property
     def localClientType(self):
         return self.__localClientType
 
-    ## SmartBus 服务主机名
+    # # SmartBus 服务主机名
     # @param self
     @property
     def masterHost(self):
         return self.__masterHost
 
-    ## SmartBus 服务端口
+    # # SmartBus 服务端口
     # @param self
     @property
     def masterPort(self):
         return self.__masterPort
 
-    ## SmartBus 从服务主机名
+    # # SmartBus 从服务主机名
     # @param self
     @property
     def slaverHost(self):
         return self.__slaverHost
 
-    ## SmartBus 从服务端口
+    # # SmartBus 从服务端口
     # @param self
     @property
     def slaverPort(self):
         return self.__slaverPort
 
-    ## 登录名
+    # # 登录名
     # @param self
     @property
     def authorUsr(self):
         return self.__authorUsr
 
-    ## 密码
+    # # 密码
     # @param self
     @property
     def authorPwd(self):
         return self.__authorPwd
 
-    ## 连接附加信息
+    # # 连接附加信息
     # @param self
     @property
     def extInfo(self):
         return self.__extInfo
 
-    ## 收/发字符串时使用的编码。默认为 utils.default_encoding。
+    # # 收/发字符串时使用的编码。默认为 utils.default_encoding。
     # @param self
     @property
     def encoding(self):
         return self.__encoding
 
-    ## 连接成功事件
+    # # 连接成功事件
     # @param self
     # @param unitId 单元ID
     def onConnectSuccess(self, unitId):
         pass
 
-    ## 连接失败事件
+    # # 连接失败事件
     # @param self
     # @param unitId 单元ID
     # @param errno 错误编码
     def onConnectFail(self, unitId, errno):
         pass
 
-    ## 连接中断事件
+    # # 连接中断事件
     # @param self
     def onDisconnect(self):
         pass
 
-    ## 收到文本事件
+    # # 收到文本事件
     # @param self
     # @param packInfo 数据包信息
     # @param txt 收到的文本
@@ -275,7 +275,7 @@ class Client(object):
     def onReceiveText(self, packInfo, txt):
         pass
 
-    ## 收到流程返回数据事件
+    # # 收到流程返回数据事件
     # @param self
     # @param packInfo 数据包信息。
     # @param project 流程所在的项目
@@ -285,7 +285,7 @@ class Client(object):
     def onInvokeFlowRespond(self, packInfo, project, invokeId, result):
         pass
 
-    ## 流程返回超时事件
+    # # 流程返回超时事件
     # @param self
     # @param packInfo 数据包信息。
     # @param project 流程所在的项目
@@ -294,14 +294,14 @@ class Client(object):
     def onInvokeFlowTimeout(self, packInfo, project, invokeId):
         pass
 
-    ## 释放客户端
+    # # 释放客户端
     #
     # @param  self
     def dispose(self):
         cls = type(self)
         cls.__instances.pop(self.__localClientId, None)
 
-    ## 连接到服务器
+    # # 连接到服务器
     #
     # 如果连接失败，则抛出 @ref ConnectError 异常。
     def connect(self):
@@ -318,7 +318,7 @@ class Client(object):
         )
         errors.check_restval(result)
 
-    ## 发送数据
+    # # 发送数据
     #
     # 如果连接失败，则抛出 @ref SendDataError 异常
     # @param self
@@ -345,7 +345,7 @@ class Client(object):
         )
         errors.check_restval(result)
 
-    ## 调用流程
+    # # 调用流程
     #
     # 如果连接失败，则抛出 @ref SendDataError 异常
     # @param self
@@ -384,7 +384,10 @@ class Client(object):
             c_timeout,
             c_in_valuelist
         )
-        errors.check_restval(result)
+        if result < 0:
+            errors.check_restval(result)
+        elif result == 0:
+            raise errors.InvokeFlowIdError()
         return result
     
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
