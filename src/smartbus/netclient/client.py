@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+import logging
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_long, c_ushort, c_void_p, c_char_p
 
 import json
@@ -74,11 +75,13 @@ class Client(object):
     # @param unitid 单元ID。在所连接到的SmartBus服务器上，每个客户端进程的单元ID都必须是全局唯一的。
     # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、当前目录、运行目录、文件目录。@see _c_smartbus_netcli_interface.lib_filename
     @classmethod
-    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename):
+    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename, log_levels=(logging.DEBUG, logging.ERROR)):
         if cls.__unitid is not None:
             raise errors.AlreadyInitializedError()
 #        if not isinstance(unitid, int):
 #            raise TypeError('The argument "unit" should be an integer')
+        cls.__log_levels = log_levels
+        cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
         if not libraryfile:
             libraryfile = sbncif.lib_filename
         try:
@@ -91,7 +94,7 @@ class Client(object):
                     cls.__lib = sbncif.load_lib(os.path.join(os.getcwd(), libraryfile))
                 except:
                     try:
-                        cls.__lib = sbncif.load_lib(os.path.join(os.path.abspath(__file__), libraryfile))
+                        cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile))
                     except:
                         raise
         errors.check_restval(sbncif._c_fn_Init(unitid))
@@ -110,6 +113,10 @@ class Client(object):
             cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
+        cls.__c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls.__trace_cb)
+        cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(cls.__traceerr_cb)
+        sbncif._c_fn_SetTraceStr(cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
+
 
     # # 释放库
     #
@@ -188,6 +195,14 @@ class Client(object):
                     cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
             else:
                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
+                
+    @classmethod
+    def __trace_cb(cls, msg):
+        cls.__logger.log(cls.__log_levels[0], msg)
+    
+    @classmethod
+    def __traceerr_cb(cls, msg):
+        cls.__logger.log(cls.__log_levels[1], msg)
 
     # # 客户端ID
     # @param self

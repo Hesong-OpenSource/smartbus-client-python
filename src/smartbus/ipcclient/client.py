@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+import logging
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_void_p, c_char_p
 
 import json
@@ -68,7 +69,17 @@ class Client(object):
     # @param clienttype 客户端类型。
     # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、当前目录、运行目录、文件目录。@see _c_smartbus_ipccli_interface.lib_filename
     @classmethod
-    def initialize(cls, clientid, clienttype, onglobalconnect=None, libraryfile=sbicif.lib_filename):
+    def initialize(cls, clientid, clienttype, onglobalconnect=None, libraryfile=sbicif.lib_filename, log_levels=(logging.DEBUG, logging.ERROR)):
+        '''初始化
+        
+        这是一个类方法。调用其他方法前，必须首先使用这个方法初始化库。
+        :param clientid: 客户端ID。在同一个节点中，ID必须唯一。不得小于等于16
+        :param clienttype: 客户端类型。
+        :param onglobalconnect:
+        :param libraryfile:
+        '''
+        cls.__log_levels = log_levels
+        cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
         if cls.__lib:
             raise errors.AlreadyInitializedError()
         if not libraryfile:
@@ -83,7 +94,7 @@ class Client(object):
                     cls.__lib = sbicif.load_lib(os.path.join(os.getcwd(), libraryfile))
                 except:
                     try:
-                        cls.__lib = sbicif.load_lib(os.path.join(os.path.abspath(__file__), libraryfile))
+                        cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile))
                     except:
                         raise
 
@@ -102,6 +113,9 @@ class Client(object):
             cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
+        cls.__c_fn_trace_cb = sbicif._c_fntyp_trace_str_cb(cls.__trace_cb)
+        cls.__c_fn_traceerr_cb = sbicif._c_fntyp_trace_str_cb(cls.__traceerr_cb)
+        sbicif._c_fn_SetTraceStr(cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
 
     # # 释放库
     # @param cls 类
@@ -186,6 +200,14 @@ class Client(object):
                     cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
             else:
                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
+                
+    @classmethod
+    def __trace_cb(cls, msg):
+        cls.__logger.log(cls.__log_levels[0], msg)
+    
+    @classmethod
+    def __traceerr_cb(cls, msg):
+        cls.__logger.log(cls.__log_levels[1], msg)
 
     # # @name 事件
     # # @{

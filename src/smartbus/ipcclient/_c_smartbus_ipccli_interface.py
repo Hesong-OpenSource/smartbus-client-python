@@ -14,18 +14,16 @@ import os
 
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p
 
-from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb
+from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
 
-# # smartbus IPC 客户端默认的共享/动态库文件名 
-#
-# 在POSIX系统下，默认是 libbusipccli.so。
-# 在WINNT系统下，默认是 busipccli.dll。
 if os.name in ('posix'):
     lib_filename = 'libbusipccli.so'
+    '''smartbus IPC 客户端默认的共享/动态库文件名。在POSIX系统下，默认是 libbusipccli.so。'''
 elif os.name in ("nt", "ce"):
     lib_filename = 'smartbus_ipc_cli.dll'
+    '''smartbus IPC 客户端默认的共享/动态库文件名。在WINNT系统下，默认是 busipccli.dll。'''
 else:
-    raise NotImplementedError()
+    raise NotImplementedError('Unsupported OS name "{}"'.format(os.name))
     
 # # 共享/动态库
 _lib = None
@@ -40,6 +38,7 @@ _c_fn_CreateConnect = None
 _c_fn_SendData = None
 _c_fn_RemoteInvokeFlow = None
 _c_fn_SendPing = None
+_c_fn_SetTraceStr = None
 
 # # @}
 
@@ -66,6 +65,9 @@ _paramflags_RemoteInvokeFlow = (1, 'server_unitid', c_int), (1, 'processindex', 
 
 _c_fntyp_SendPing = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_int, c_void_p, c_int)
 _paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
+
+_c_fntyp_SetTraceStr = CFUNCTYPE(None, _c_fntyp_trace_str_cb, _c_fntyp_trace_str_cb)
+_paramflags_SetTraceStr = (1, 'tracestr', _c_fntyp_trace_str_cb), (1, 'traceerr', _c_fntyp_trace_str_cb)
 
 # # @}
 
@@ -94,5 +96,6 @@ def load_lib(filepath=lib_filename):
         _c_fn_RemoteInvokeFlow = _c_fntyp_RemoteInvokeFlow(('SmartBusIpcCli_RemoteInvokeFlow', _lib), _paramflags_RemoteInvokeFlow)
         global _c_fn_SendPing
         _c_fn_SendPing = _c_fntyp_SendPing(('SmartBusIpcCli_SendPing', _lib), _paramflags_SendPing)
-
+        global _c_fn_SetTraceStr
+        _c_fn_SetTraceStr = _c_fntyp_SetTraceStr(('SmartBusIpcCli_SetTraceStr', _lib), _paramflags_SetTraceStr)
     return _lib
