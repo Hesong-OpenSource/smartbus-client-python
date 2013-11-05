@@ -1,12 +1,12 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-##@package smartbus.ipcclient._c_smartbus_ipccli_interface
-#smartbus 进程通信客户端C-API ctypes 对照翻译
-#
-#使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
-#
-#@date 2013-1-28
-#@author lxy@heosng.net
+''''smartbus 进程通信客户端C-API ctypes 对照翻译
+
+使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
+
+:date: 2013-1-28
+:author: lxy@heosng.net
+'''
 
 from __future__ import absolute_import
 
@@ -16,10 +16,10 @@ from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char
 
 from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb
 
-## smartbus IPC 客户端默认的共享/动态库文件名 
+# # smartbus IPC 客户端默认的共享/动态库文件名 
 #
-#在POSIX系统下，默认是 libbusipccli.so。@note: 目前只有linux x86的库文件。
-#在WINNT系统下，默认是 busipccli.dll。@note: 目前尚不支持WINDOWS。
+# 在POSIX系统下，默认是 libbusipccli.so。
+# 在WINNT系统下，默认是 busipccli.dll。
 if os.name in ('posix'):
     lib_filename = 'libbusipccli.so'
 elif os.name in ("nt", "ce"):
@@ -27,11 +27,11 @@ elif os.name in ("nt", "ce"):
 else:
     raise NotImplementedError()
     
-## 共享/动态库
+# # 共享/动态库
 _lib = None
 
-## @name 库函数
-## @{
+# # @name 库函数
+# # @{
 
 _c_fn_Init = None
 _c_fn_Release = None
@@ -41,10 +41,10 @@ _c_fn_SendData = None
 _c_fn_RemoteInvokeFlow = None
 _c_fn_SendPing = None
 
-## @}
+# # @}
 
-## @name 库函数类型
-## @{
+# # @name 库函数类型
+# # @{
 
 _c_fntyp_Init = CFUNCTYPE(c_int, c_int, c_int)
 _paramflags_Init = (1, 'clienttype', 0), (1, 'clientid', 0)
@@ -67,10 +67,14 @@ _paramflags_RemoteInvokeFlow = (1, 'server_unitid', c_int), (1, 'processindex', 
 _c_fntyp_SendPing = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_int, c_void_p, c_int)
 _paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
 
-## @}
+# # @}
 
-## 加载共享/动态库
+# # 加载共享/动态库
 def load_lib(filepath=lib_filename):
+    '''加载共享/动态库
+    
+    :param filepath: 动态/共享库文件名
+    '''
     if not filepath:
         filepath = lib_filename
     global _lib

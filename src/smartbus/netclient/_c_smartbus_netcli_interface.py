@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-##@package smartbus.netclient._c_smartbus_netcli_interface
-#smartbus 网络通信客户端C-API ctypes 对照翻译
-#
-#使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
-#
-#@date 2013-2-3
-#@author lxy@heosng.net
+'''smartbus 网络通信客户端C-API ctypes 对照翻译
+
+使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
+
+:date: 2013-2-3
+:author: lxy@heosng.net
+'''
 
 from __future__ import absolute_import
 
@@ -15,10 +15,10 @@ from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char
 
 from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb
 
-## smartbus IPC 客户端默认的共享/动态库文件名 
+# # smartbus IPC 客户端默认的共享/动态库文件名 
 #
-#在POSIX系统下，默认是 libbusnetcli.so。@note: 目前只有linux x86的库文件。
-#在WINNT系统下，默认是 smartbus_net_cli.dll。@note: 目前只有windows x86的动态库。
+# 在POSIX系统下，默认是 libbusnetcli.so。
+# 在WINNT系统下，默认是 smartbus_net_cli.dll。
 if os.name in ('posix'):
     lib_filename = 'libbusnetcli.so'
 elif os.name in ("nt", "ce"):
@@ -72,6 +72,10 @@ _paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), 
 # load library function
 #===============================================================================
 def load_lib(filepath=lib_filename):
+    '''加载共享/动态库
+    
+    :param filepath: 动态/共享库文件名
+    '''
     if not filepath:
         filepath = lib_filename
     global _lib

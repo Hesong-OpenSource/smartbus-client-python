@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# # @package smartbus.ipcclient.client
-# smartbus 进程间通信客户端的Python接口类客户端类型
-# @author lxy@hesong.net
-# @date 2013-6-8
+'''smartbus 进程间通信客户端的Python接口类客户端类型
+:author: lxy@hesong.net
+:date: 2013-6-8
+'''
 
 from __future__ import absolute_import
 
@@ -18,18 +18,27 @@ from .._c_smartbus import PackInfo
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
-# # SmartBus IPC 客户端类
-#
-# 这个类封装了 SmartBus IPC 客户端的一系列方法与事件
+
 class Client(object):
+    '''SmartBus IPC 客户端类
+    
+    这个类封装了 SmartBus IPC 客户端的一系列方法与事件
+    '''
     __lib = None
     __instance = None
 
     # # 构造函数
     # @param self
-    # @param encoding 收/发字符串时使用的编码。默认为 @ref smartbus.utils.default_encoding
+    # @param encoding 
     # @see encoding
     def __init__(self, username=None, password=None, extInfo=None, encoding=default_encoding):
+        '''构造函数
+        
+        :param username: 验证用户名
+        :param password: 验证密码
+        :param extInfo: 附加信息
+        :param encoding: 收/发字符串时使用的编码。默认为 smartbus.utils.default_encoding
+        '''
         # # 编码
         #
         # 收/发字符串时使用该编码进行编解码处理。该属性由构造函数的encoding参数指定
