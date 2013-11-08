@@ -1,4 +1,4 @@
-/.git/*
+
 /.settings/*
 .project
 .pydevproject
@@ -7,3 +7,4 @@
 /src/.metadata/*
 *.pyc
 *.pyo
+/src/smartbus/cdll/*

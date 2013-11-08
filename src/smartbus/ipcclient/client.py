@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+import platform
 import logging
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_void_p, c_char_p
 
@@ -67,7 +68,8 @@ class Client(object):
     # @param cls 类
     # @param clientid 客户端ID。在同一个节点中，ID必须唯一。
     # @param clienttype 客户端类型。
-    # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、当前目录、运行目录、文件目录。@see _c_smartbus_ipccli_interface.lib_filename
+    # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，
+    # 其搜索的目录次序为：系统目录、../cdll/${system}/${machine}、 运行目录、当前目录、本文件目录。@see _c_smartbus_ipccli_interface.lib_filename
     @classmethod
     def initialize(cls, clientid, clienttype, onglobalconnect=None, libraryfile=sbicif.lib_filename, log_levels=(logging.DEBUG, logging.ERROR)):
         '''初始化
@@ -88,16 +90,15 @@ class Client(object):
             cls.__lib = sbicif.load_lib(libraryfile)
         except:
             try:
-                cls.__lib = sbicif.load_lib(os.path.join(os.path.curdir, libraryfile))
+                cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile))
             except:
                 try:
-                    cls.__lib = sbicif.load_lib(os.path.join(os.getcwd(), libraryfile))
+                    cls.__lib = sbicif.load_lib(os.path.join(os.getcwd(), libraryfile))    
                 except:
                     try:
-                        cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile))
+                        cls.__lib = sbicif.load_lib(os.path.join(os.path.curdir, libraryfile))
                     except:
-                        raise
-
+                        cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile))
         errors.check_restval(sbicif._c_fn_Init(clienttype, clientid))
         cls.__c_fn_connection_cb = sbicif._c_fntyp_connection_cb(cls.__connection_cb)
         cls.__c_fn_recvdata_cb = sbicif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
