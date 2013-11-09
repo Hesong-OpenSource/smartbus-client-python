@@ -178,7 +178,7 @@ _c_fntyp_recvdata_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_
 _c_fntyp_global_connect_cb = CALLBACKFUNCTYPE(None, c_void_p, c_char, c_char, c_char, c_char, c_char_p)
 _c_fntyp_invokeflow_ret_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
 _c_fntyp_unitdata_cb = CALLBACKFUNCTYPE(None, c_byte, c_byte, c_void_p, c_int)
-_c_fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, c_void_p)
+_c_fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, c_char_p)
 
 
 # # 接收数据包信息

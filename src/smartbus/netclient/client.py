@@ -77,12 +77,12 @@ class Client(object):
     # @param libraryfile 库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：
     # 系统目录、../cdll/${system}/${machine}、 运行目录、当前目录、本文件目录。@see _c_smartbus_netcli_interface.lib_filename
     @classmethod
-    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename, log_levels=(logging.DEBUG, logging.ERROR)):
+    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename, logging_option=(True, logging.DEBUG, logging.ERROR)):
         if cls.__unitid is not None:
             raise errors.AlreadyInitializedError()
 #        if not isinstance(unitid, int):
 #            raise TypeError('The argument "unit" should be an integer')
-        cls.__log_levels = log_levels
+        cls.__logging_option = logging_option
         cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
         if not libraryfile:
             libraryfile = sbncif.lib_filename
@@ -115,9 +115,10 @@ class Client(object):
             cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
-        cls.__c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls.__trace_cb)
-        cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(cls.__traceerr_cb)
-        sbncif._c_fn_SetTraceStr(cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
+        if logging_option[0]:
+            cls.__c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls.__trace_cb)
+            cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(cls.__traceerr_cb)
+            sbncif._c_fn_SetTraceStr(cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
 
 
     # # 释放库
@@ -200,11 +201,11 @@ class Client(object):
                 
     @classmethod
     def __trace_cb(cls, msg):
-        cls.__logger.log(cls.__log_levels[0], msg)
+        cls.__logger.log(cls.__logging_option[1], to_str(msg))
     
     @classmethod
     def __traceerr_cb(cls, msg):
-        cls.__logger.log(cls.__log_levels[1], msg)
+        cls.__logger.log(cls.__logging_option[2], to_str(msg))
 
     # # 客户端ID
     # @param self

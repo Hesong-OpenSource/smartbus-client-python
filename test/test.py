@@ -7,23 +7,36 @@ Created on 2013-3-5
 author: tanbro
 '''
 
+import logging
+
+logging.root.setLevel(logging.DEBUG)
+
 if __name__ == '__main__':
     import smartbus.netclient
     
-    def onReceiveText(self, packInfo, txt):
-        '''
-        收到了文本消息。
-        :param packInfo:
-        :param txt:
-        '''
-        print(txt)
+    unit_id = None
     
-    smartbus.netclient.Client.initialize(13, '''/media/08CAB087CAB07314/My Projects/TK ClientsServiceSystem/smartbus/lib/linux-gcc4.1.2-x86/libbusnetcli.so''')
-    cli = smartbus.netclient.Client(localClientId=0, localClientType=9, masterHost='192.168.3.20', masterPort=8089, encoding='utf-8')
+    def onConnectSuccess(unitId):
+        print('onConnectSuccess', unitId)
+        global unit_id
+        unit_id = unitId
+    
+    def onReceiveText(self, packInfo, txt):
+        print('onReceiveText', packInfo, txt)
+        
+    def onConnectFail(unitId, errno):
+        print('onConnectFail', unitId, errno)
+    
+    smartbus.netclient.Client.initialize(17)
+    cli = smartbus.netclient.Client(localClientId=0, localClientType=20, masterHost='192.168.5.10', masterPort=8089, encoding='utf-8')
+    cli.onConnectSuccess = onConnectSuccess
+    cli.onReceiveText = onReceiveText
+    cli.onConnectFail = onConnectFail
+    
+    print('connecting...')
     cli.connect()
     
-    cli.onReceiveText = onReceiveText
-
+    
     while True:
-        s = input()
-        cli.sendText(cmd=1, cmdType=1, dstUnitId=0, dstClientId=15, dstClientType=15, txt=s)
+        s = input('>')
+        cli.sendText(cmd=1, cmdType=1, dstUnitId=unit_id, dstClientId=10, dstClientType=15, txt=s)
