@@ -210,6 +210,10 @@ class Client(object):
     @classmethod
     def __traceerr_cb(cls, msg):
         cls.__logger.log(cls.__logging_option[2], to_str(msg))
+        
+    @property
+    def library(self):
+        return self.__lib
 
     # # @name 事件
     # # @{
