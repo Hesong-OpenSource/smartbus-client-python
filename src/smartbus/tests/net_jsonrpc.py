@@ -30,7 +30,7 @@ CMDTYPE_JSONRPC_RES = 212
 CLIENT_UNIT_ID = 38
 SERVER_UNIT_ID = 39
 
-SMARTBUS_HOST = '192.168.5.10'
+SMARTBUS_HOST = '10.4.62.45' # '192.168.5.10'
 SMARTBUS_PORT = 8089
 
 def run_echo_server(started_cond, term_cond):
@@ -244,7 +244,7 @@ class JsonRpcTest(unittest.TestCase):
         self.assertEqual(result, msg)
         
         
-    def test_concurrent_echo(self):
+    def test_echo_thread(self):
         cls = type(self)
          
         def _echo(index):
@@ -290,8 +290,8 @@ class JsonRpcTest(unittest.TestCase):
             self.assertEqual(result, msg)
          
         threads = []
-         
-        for i in range(100):
+        
+        for i in range(10):
             trd = threading.Thread(target=_echo, args=(i,))
             trd.daemon = True
             threads.append(trd)
