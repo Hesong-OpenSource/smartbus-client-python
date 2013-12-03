@@ -30,7 +30,7 @@ CMDTYPE_JSONRPC_RES = 212
 CLIENT_UNIT_ID = 38
 SERVER_UNIT_ID = 39
 
-SMARTBUS_HOST = '10.4.62.45' # '192.168.5.10'
+SMARTBUS_HOST = '10.4.62.45'  # '192.168.5.10'
 SMARTBUS_PORT = 8089
 
 def run_echo_server(started_cond, term_cond):
@@ -76,7 +76,7 @@ def run_echo_server(started_cond, term_cond):
     pass
 
     def onReceiveText(packInfo, txt):
-#         print('Server Process: ReceiveText: txt={1}'.format(packInfo, txt))
+        print('Server Process: ReceiveText: txt={1}'.format(packInfo, txt))
         reqobj = json.loads(txt)
         id_ = reqobj['id']
         try:
@@ -172,7 +172,7 @@ class JsonRpcTest(unittest.TestCase):
             pass
         
             def onReceiveText(packInfo, txt):
-#                 print('ReceiveText: txt={1}'.format(packInfo, txt))
+                print('ReceiveText: txt={1}'.format(packInfo, txt))
                 reqobj = json.loads(txt)
                 id_ = reqobj['id']
                 try:
@@ -256,7 +256,7 @@ class JsonRpcTest(unittest.TestCase):
             with cls.pending_lock:
                 pending = cls.pending_invokes[id_] = [cond, None]
  
-#             print('[{}] >>> send'.format(index))
+            print('[{}] >>> send'.format(index))
             try:
                 self._client.send(
                     cmd=0,
@@ -277,11 +277,11 @@ class JsonRpcTest(unittest.TestCase):
                 with cls.pending_lock:
                     cls.pending_invokes.pop(id_)
                 raise
-#             print('[{}] <<< send'.format(index))       
+            print('[{}] <<< send'.format(index))       
                  
-#             print('[{}] >>> wait'.format(index))  
+            print('[{}] >>> wait'.format(index))  
             cond.wait()
-#             print('[{}] <<< wait'.format(index))
+            print('[{}] <<< wait'.format(index))
             with cls.pending_lock:
                 cls.pending_invokes.pop(id_)
             result = pending[1]
@@ -298,10 +298,10 @@ class JsonRpcTest(unittest.TestCase):
             trd.start()
              
         for i in range(len(threads)):
-#             print('[{}] joinning...'.format(i))
+            print('[{}] joinning...'.format(i))
             trd = threads[i]
             trd.join()
-#             print('[{}] joinned'.format(i))
+            print('[{}] joinned'.format(i))
 
 if __name__ == "__main__":
     # import sys;sys.argv = ['', 'Test.testName']
