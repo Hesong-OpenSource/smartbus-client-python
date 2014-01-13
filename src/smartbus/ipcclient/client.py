@@ -80,6 +80,8 @@ class Client(object):
         :param onglobalconnect:
         :param libraryfile:
         '''
+        cls._clientid = clientid
+        cls._clienttype = clienttype
         cls.__logging_option = logging_option
         cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
         if cls.__lib:
@@ -151,6 +153,8 @@ class Client(object):
     @classmethod
     def __connection_cb(cls, arg, local_clientid, accesspoint_unitid, ack):
         inst = cls.__instance
+        inst._unitid = accesspoint_unitid
+        inst._clientid = local_clientid
         if ack == 0:  # 连接成功
             if callable(inst.onConnectSuccess):
                 inst.onConnectSuccess(accesspoint_unitid)
@@ -214,6 +218,22 @@ class Client(object):
     @property
     def library(self):
         return self.__lib
+    
+    def get_unitid(self):
+        return self._unitid
+    unitid = property(get_unitid)
+    
+    def get_clientid(self):
+        return self._clientid
+    clientid = property(get_clientid)
+    
+    def get_clienttype(self):
+        return self._clienttype
+    clienttype = property(get_clienttype)
+    
+    def get_addr_expr(self):
+        return '{} {} {}'.format(self.unitid, self.clientid, self.clienttype)
+    addr_expr = property(addr_expr)
 
     # # @name 事件
     # # @{

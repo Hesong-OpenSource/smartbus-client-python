@@ -143,6 +143,7 @@ class Client(object):
     def __connection_cb(cls, arg, local_clientid, accesspoint_unitid, ack):
         inst = cls.__instances.get(local_clientid, None)
         if inst is not None:
+            inst._unitid = accesspoint_unitid
             if ack == SMARTBUS_ERR_OK:  # 连接成功
                 if hasattr(inst, 'onConnectSuccess'):
                     inst.onConnectSuccess(accesspoint_unitid)
@@ -218,6 +219,14 @@ class Client(object):
     @property
     def localClientType(self):
         return self.__localClientType
+    
+    @property
+    def unitid(self):
+        return self._unitid
+    
+    @property
+    def addr_expr(self):
+        return '{} {} {}'.format(self._unitid, self.__localClientId, self.__localClientType)
 
     # # SmartBus 服务主机名
     # @param self
