@@ -233,7 +233,7 @@ class Client(object):
     
     def get_addr_expr(self):
         return '{} {} {}'.format(self.unitid, self.clientid, self.clienttype)
-    addr_expr = property(addr_expr)
+    addr_expr = property(get_addr_expr)
 
     # # @name 事件
     # # @{

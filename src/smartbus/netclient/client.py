@@ -16,7 +16,7 @@ from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_long
 import json
 
 from . import _c_smartbus_netcli_interface as sbncif
-from .._c_smartbus import PackInfo, MIN_SMARTBUS_NETCLI_UNITID, MAX_SMARTBUS_NODE_NUM, SMARTBUS_ERR_OK
+from .._c_smartbus import PackInfo, SMARTBUS_ERR_OK
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
