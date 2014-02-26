@@ -34,18 +34,21 @@ if __name__ == '__main__':
 
 
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
-        print(result)
-        print(result[0]['result'])
+        print('FlowRespond:', packInfo, project, invokeId, result)
+        
+    def onInvokeFlowAcknowledge(packInfo, project, invokeId, ack, msg):
+        print('FlowAcknowledge:\n packInfo={}\n project={}\n invokeId={}\n ack={}\n msg={}'.format(packInfo, project, invokeId, ack, msg))
 
     print ('init...')
-    smartbus.netclient.Client.initialize(15)
+    smartbus.netclient.Client.initialize(17)
     print ('init OK! Connecting...')
 
-    cli = smartbus.netclient.Client(0, -1, '192.168.3.20', 8089, encoding='utf-8')
+    cli = smartbus.netclient.Client(0, 13, '10.4.62.45', 8089, encoding='utf-8')
 
     cli.onConnectSuccess = onConnectSuccess
     cli.onReceiveText = onReceiveText
     cli.onInvokeFlowRespond = onInvokeFlowRespond
+    cli.onInvokeFlowAcknowledge = onInvokeFlowAcknowledge
     
     cli.connect()
     
@@ -53,11 +56,11 @@ if __name__ == '__main__':
     while True:
         s = readln()
         #  'mbcs'
-        #cli.send(cmd=1, cmdType=1, dstUnitId=0, dstClientId=15, dstClientType=15, txt=s)
+        # cli.send(cmd=1, cmdType=1, dstUnitId=0, dstClientId=15, dstClientType=15, txt=s)
         s = to_unicode(s)
         data = dict(
-            jsonrpc = '2.0',
-            method = 'test',
-            params = [s]
+            jsonrpc='2.0',
+            method='test.Echo',
+            params=[s]
         )
-        cli.invokeFlow(0,0,"Project1", "WebChatRpc", data);
+        cli.invokeFlow(0, 0, "Project1", "_agent_rpc", data);

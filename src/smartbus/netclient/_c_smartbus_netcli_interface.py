@@ -8,12 +8,14 @@
 :author: lxy@heosng.net
 '''
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
+import sys
 import os
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p, c_ushort, c_long
 
-from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
+from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, \
+    _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
 
 # # smartbus IPC 客户端默认的共享/动态库文件名 
 #
@@ -43,6 +45,7 @@ _c_fn_SendData = None
 _c_fn_RemoteInvokeFlow = None
 _c_fn_SendPing = None
 _c_fn_SetTraceStr = None
+_c_fn_SetCallBackFnEx = None
 
 #===============================================================================
 # function type and param flags
@@ -71,6 +74,9 @@ _paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), 
 _c_fntyp_SetTraceStr = CFUNCTYPE(None, _c_fntyp_trace_str_cb, _c_fntyp_trace_str_cb)
 _paramflags_SetTraceStr = (1, 'tracestr', _c_fntyp_trace_str_cb), (1, 'traceerr', _c_fntyp_trace_str_cb)
 
+_c_fntyp_SetCallBackFnEx = CFUNCTYPE(None, c_char_p, c_void_p)
+_paramflags_SetCallBackFnEx = (1, 'callback_name', c_char_p), (1, 'callbackfn', c_void_p)
+
 #===============================================================================
 # load library function
 #===============================================================================
@@ -83,22 +89,30 @@ def load_lib(filepath=lib_filename):
         filepath = lib_filename
     global _lib
     if not _lib:
-        _lib = CDLL(filepath, mode=RTLD_GLOBAL)
-        global _c_fn_Init
-        _c_fn_Init = _c_fntyp_Init(('SmartBusNetCli_Init', _lib), _paramflags_Init)
-        global _c_fn_Release
-        _c_fn_Release = _c_fntyp_Release(('SmartBusNetCli_Release', _lib), _paramflags_Release)
-        global _c_fn_SetCallBackFn
-        _c_fn_SetCallBackFn = _c_fntyp_SetCallBackFn(('SmartBusNetCli_SetCallBackFn', _lib), _paramflags_SetCallBackFn)
-        global _c_fn_CreateConnect
-        _c_fn_CreateConnect = _c_fntyp_CreateConnect(('SmartBusNetCli_CreateConnect', _lib), _paramflags_CreateConnect)
-        global _c_fn_SendData
-        _c_fn_SendData = _c_fntyp_SendData(('SmartBusNetCli_SendData', _lib), _paramflags_SendData)
-        global _c_fn_RemoteInvokeFlow
-        _c_fn_RemoteInvokeFlow = _c_fntyp_RemoteInvokeFlow(('SmartBusNetCli_RemoteInvokeFlow', _lib), _paramflags_RemoteInvokeFlow)
-        global _c_fn_SendPing
-        _c_fn_SendPing = _c_fntyp_SendPing(('SmartBusNetCli_SendPing', _lib), _paramflags_SendPing)
-        global _c_fn_SetTraceStr
-        _c_fn_SetTraceStr = _c_fntyp_SetTraceStr(('SmartBusNetCli_SetTraceStr', _lib), _paramflags_SetTraceStr)
+        try:
+            _lib = CDLL(filepath, mode=RTLD_GLOBAL)
+            global _c_fn_Init
+            _c_fn_Init = _c_fntyp_Init(('SmartBusNetCli_Init', _lib), _paramflags_Init)
+            global _c_fn_Release
+            _c_fn_Release = _c_fntyp_Release(('SmartBusNetCli_Release', _lib), _paramflags_Release)
+            global _c_fn_SetCallBackFn
+            _c_fn_SetCallBackFn = _c_fntyp_SetCallBackFn(('SmartBusNetCli_SetCallBackFn', _lib), _paramflags_SetCallBackFn)
+            global _c_fn_CreateConnect
+            _c_fn_CreateConnect = _c_fntyp_CreateConnect(('SmartBusNetCli_CreateConnect', _lib), _paramflags_CreateConnect)
+            global _c_fn_SendData
+            _c_fn_SendData = _c_fntyp_SendData(('SmartBusNetCli_SendData', _lib), _paramflags_SendData)
+            global _c_fn_RemoteInvokeFlow
+            _c_fn_RemoteInvokeFlow = _c_fntyp_RemoteInvokeFlow(('SmartBusNetCli_RemoteInvokeFlow', _lib), _paramflags_RemoteInvokeFlow)
+            global _c_fn_SendPing
+            _c_fn_SendPing = _c_fntyp_SendPing(('SmartBusNetCli_SendPing', _lib), _paramflags_SendPing)
+            global _c_fn_SetTraceStr
+            _c_fn_SetTraceStr = _c_fntyp_SetTraceStr(('SmartBusNetCli_SetTraceStr', _lib), _paramflags_SetTraceStr)
+            global _c_fn_SetCallBackFnEx
+            _c_fn_SetCallBackFnEx = _c_fntyp_SetCallBackFnEx(('SmartBusNetCli_SetCallBackFnEx', _lib), _paramflags_SetCallBackFnEx)
+        except Exception as e:
+            if _lib:
+                _lib = None
+            print(filepath, e, file=sys.stdout)
+            raise
     return _lib
 

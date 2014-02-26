@@ -88,7 +88,8 @@ class Client(object):
             libraryfile = sbncif.lib_filename
         try:
             cls.__lib = sbncif.load_lib(libraryfile)
-        except:
+        except Exception as e:
+            print(e)
             try:
                 cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile))
             except:
@@ -106,6 +107,7 @@ class Client(object):
         cls.__c_fn_recvdata_cb = sbncif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
         cls.__c_fn_disconnect_cb = sbncif._c_fntyp_disconnect_cb(cls.__disconnect_cb)
         cls.__c_fn_invokeflow_ret_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ret_cb)
+        cls.__c_fn_invokeflow_ack_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ack_cb)
         cls.__c_fn_global_connect_cb = sbncif._c_fntyp_global_connect_cb(cls.__global_connect_cb)
         sbncif._c_fn_SetCallBackFn(
             cls.__c_fn_connection_cb,
@@ -115,6 +117,7 @@ class Client(object):
             cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
+        sbncif._c_fn_SetCallBackFnEx(c_char_p(b"smartbus_invokeflow_ack_cb"), cls.__c_fn_invokeflow_ack_cb)
         if logging_option[0]:
             cls.__c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls.__trace_cb)
             cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(cls.__traceerr_cb)
@@ -178,8 +181,8 @@ class Client(object):
             if ret == 1:
                 if hasattr(inst, 'onInvokeFlowRespond'):
                     packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid, inst.encoding)
-                    txt_param = to_str(param, inst.encoding)
+                    txt_projectid = to_str(projectid, inst.encoding).strip('\x00')
+                    txt_param = to_str(param, inst.encoding).strip('\x00')
                     py_param = json.loads(txt_param, encoding=inst.encoding)
                     inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
             elif ret == -1:
@@ -187,7 +190,17 @@ class Client(object):
                     txt_projectid = to_str(projectid, inst.encoding)
                     packInfo = PackInfo(head)
                     inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
-                    
+    
+    @classmethod
+    def __invokeflow_ack_cb(cls, arg, local_clientid, head, projectid, invoke_id, ack, msg):
+        inst = cls.__instances.get(local_clientid, None)
+        if inst is not None:
+            if hasattr(inst, 'onInvokeFlowAcknowledge'):
+                packInfo = PackInfo(head)
+                txt_projectid = to_str(projectid, inst.encoding).strip('\x00')
+                txt_msg = to_str(msg, inst.encoding).strip('\x00')
+                inst.onInvokeFlowAcknowledge(packInfo, txt_projectid, invoke_id, ack, txt_msg)
+                   
     @classmethod
     def __global_connect_cb(cls, arg, unitid, clientid, clienttype, status, ext_info):
         if callable(cls.__onglobalconnect):
@@ -301,13 +314,16 @@ class Client(object):
     # @see PackInfo
     def onReceiveText(self, packInfo, txt):
         pass
+    
+    def onInvokeFlowAcknowledge(self, packInfo, project, invokeId, ack, msg):
+        pass
 
     # # 收到流程返回数据事件
     # @param self
     # @param packInfo 数据包信息。
     # @param project 流程所在的项目
     # @param invokeId 调用ID。它对应于 @ref invokeFlow "invokeFlow 方法"返回的ID
-    # @param result 返回的数据。是一个Python对象。通常是一个list
+    # @param result 返回的数据。JSON数组格式。
     # @see PackInfo
     def onInvokeFlowRespond(self, packInfo, project, invokeId, result):
         pass
