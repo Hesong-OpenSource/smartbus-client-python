@@ -14,8 +14,7 @@ import sys
 import os
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p, c_ushort, c_long
 
-from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, \
-    _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
+from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
 
 # # smartbus IPC 客户端默认的共享/动态库文件名 
 #

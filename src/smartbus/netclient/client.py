@@ -88,8 +88,7 @@ class Client(object):
             libraryfile = sbncif.lib_filename
         try:
             cls.__lib = sbncif.load_lib(libraryfile)
-        except Exception as e:
-            print(e)
+        except:
             try:
                 cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile))
             except:
