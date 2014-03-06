@@ -169,8 +169,9 @@ class Client(object):
                 packInfo = PackInfo(head)
                 txt = None
                 if data:
-                    txt = to_str(string_at(data, size), inst.encoding)
-                    txt = txt.strip('\x00')
+                    bytestr = string_at(data, size)
+                    bytestr = bytestr.strip(b'\x00')
+                    txt = to_str(bytestr, inst.encoding)
                     inst.onReceiveText(packInfo, txt)
 
     @classmethod
@@ -180,8 +181,8 @@ class Client(object):
             if ret == 1:
                 if hasattr(inst, 'onInvokeFlowRespond'):
                     packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid.strip('\x00'), inst.encoding)
-                    txt_param = to_str(param.strip('\x00').strip(), inst.encoding)
+                    txt_projectid = to_str(projectid.strip(b'\x00'), inst.encoding)
+                    txt_param = to_str(param.strip(b'\x00').strip(), inst.encoding)
                     if txt_param:
                         py_param = json.loads(txt_param, encoding=inst.encoding)
                     else:
@@ -189,7 +190,7 @@ class Client(object):
                     inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
             elif ret == -1:
                 if hasattr(inst, 'onInvokeFlowTimeout'):
-                    txt_projectid = to_str(projectid.strip('\x00'), inst.encoding)
+                    txt_projectid = to_str(projectid.strip(b'\x00'), inst.encoding)
                     packInfo = PackInfo(head)
                     inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
     
@@ -199,8 +200,8 @@ class Client(object):
         if inst is not None:
             if hasattr(inst, 'onInvokeFlowAcknowledge'):
                 packInfo = PackInfo(head)
-                txt_projectid = to_str(projectid.strip('\x00'), inst.encoding)
-                txt_msg = to_str(msg.strip('\x00'), inst.encoding)
+                txt_projectid = to_str(projectid.strip(b'\x00'), inst.encoding)
+                txt_msg = to_str(msg.strip(b'\x00'), inst.encoding)
                 inst.onInvokeFlowAcknowledge(packInfo, txt_projectid, invoke_id, ack, txt_msg)
                    
     @classmethod
