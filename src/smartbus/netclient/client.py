@@ -16,7 +16,7 @@ from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_long
 import json
 
 from . import _c_smartbus_netcli_interface as sbncif
-from .._c_smartbus import PackInfo, SMARTBUS_ERR_OK
+from .._c_smartbus import PackInfo, SMARTBUS_ERR_OK, SMARTBUS_NODECLI_TYPE_IPSC
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
@@ -169,10 +169,13 @@ class Client(object):
                 packInfo = PackInfo(head)
                 txt = None
                 if data:
-                    bytestr = string_at(data, size)
-                    bytestr = bytestr.strip(b'\x00')
+                bytestr = string_at(data, size)
+                bytestr = bytestr.strip(b'\x00')
+                if packInfo.srcUnitClientType == SMARTBUS_NODECLI_TYPE_IPSC:
+                    txt = to_str(bytestr, 'cp936')
+                else:
                     txt = to_str(bytestr, inst.encoding)
-                    inst.onReceiveText(packInfo, txt)
+                inst.onReceiveText(packInfo, txt)
 
     @classmethod
     def __invokeflow_ret_cb(cls, arg, local_clientid, head, projectid, invoke_id, ret, param):
@@ -200,8 +203,8 @@ class Client(object):
         if inst is not None:
             if hasattr(inst, 'onInvokeFlowAcknowledge'):
                 packInfo = PackInfo(head)
-                txt_projectid = to_str(projectid, inst.encoding).strip('\x00')
-                txt_msg = to_str(msg, inst.encoding).strip('\x00')
+                txt_projectid = to_str(projectid, 'cp936').strip('\x00')
+                txt_msg = to_str(msg, 'cp936').strip('\x00')
                 inst.onInvokeFlowAcknowledge(packInfo, txt_projectid, invoke_id, ack, txt_msg)
                    
     @classmethod
@@ -212,17 +215,17 @@ class Client(object):
                     for v in cls.__instances.values():
                         inst = v
                         break                 
-                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
+                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info, 'cp936'))
             else:
-                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info))
+                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info, 'cp936'))
                 
     @classmethod
     def __trace_cb(cls, msg):
-        cls.__logger.log(cls.__logging_option[1], to_str(msg))
+        cls.__logger.log(cls.__logging_option[1], to_str(msg, 'cp936'))
     
     @classmethod
     def __traceerr_cb(cls, msg):
-        cls.__logger.log(cls.__logging_option[2], to_str(msg))
+        cls.__logger.log(cls.__logging_option[2], to_str(msg, 'cp936'))
 
     # # 客户端ID
     # @param self
