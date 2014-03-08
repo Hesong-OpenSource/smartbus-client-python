@@ -169,12 +169,12 @@ class Client(object):
                 packInfo = PackInfo(head)
                 txt = None
                 if data:
-                bytestr = string_at(data, size)
-                bytestr = bytestr.strip(b'\x00')
-                if packInfo.srcUnitClientType == SMARTBUS_NODECLI_TYPE_IPSC:
-                    txt = to_str(bytestr, 'cp936')
-                else:
-                    txt = to_str(bytestr, inst.encoding)
+                    bytestr = string_at(data, size)
+                    bytestr = bytestr.strip(b'\x00')
+                    if packInfo.srcUnitClientType == SMARTBUS_NODECLI_TYPE_IPSC:
+                        txt = to_str(bytestr, 'cp936')
+                    else:
+                        txt = to_str(bytestr, inst.encoding)
                 inst.onReceiveText(packInfo, txt)
 
     @classmethod
