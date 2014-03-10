@@ -128,6 +128,23 @@ SMARTBUS_ERR_CMDTYPE_INVALID = -16
 # #无效的客户端类型
 SMARTBUS_ERR_CLIENTTYPE_INVALID = -17
 
+#// 发送数据错误
+SMARTBUS_ERR_SEND_DATA          =   -18 
+#// 分配内存错误
+SMARTBUS_ERR_MEM_ALLOC          =   -19 
+#// 建立连接失败
+SMARTBUS_ERR_ESTABLI_CONNECT    =   -20 
+#// 客户端太多
+SMARTBUS_ERR_CLI_TOOMANY        =   -21 
+#// 客户端已存在
+SMARTBUS_ERR_CLI_EXIST          =   -22 
+#// 目标不存在
+SMARTBUS_ERR_DEST_NONEXIST      =   -23 
+#// 重复注册
+SMARTBUS_ERR_REGISTERED_REPEAT  =   -24 
+#// 超时
+SMARTBUS_ERR_TIMEOUT            =   -25 
+
 # #其它错误
 SMARTBUS_ERR_OTHER = -99
 

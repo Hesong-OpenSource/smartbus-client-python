@@ -16,7 +16,7 @@ from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_long
 import json
 
 from . import _c_smartbus_netcli_interface as sbncif
-from .._c_smartbus import PackInfo, SMARTBUS_ERR_OK, SMARTBUS_NODECLI_TYPE_IPSC
+from .._c_smartbus import PackInfo, SMARTBUS_ERR_OK, SMARTBUS_NODECLI_TYPE_IPSC, SMARTBUS_ERR_TIMEOUT
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
@@ -184,18 +184,23 @@ class Client(object):
             if ret == 1:
                 if hasattr(inst, 'onInvokeFlowRespond'):
                     packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid, inst.encoding).strip('\x00')
-                    txt_param = to_str(param, inst.encoding).strip('\x00').strip()
+                    txt_projectid = to_str(projectid, 'cp936').strip('\x00')
+                    txt_param = to_str(param, 'cp936').strip('\x00').strip()
                     if txt_param:
-                        py_param = json.loads(txt_param, encoding=inst.encoding)
+                        py_param = json.loads(txt_param)
                     else:
                         py_param = None
                     inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
-            elif ret == -1:
+            elif ret == SMARTBUS_ERR_TIMEOUT:
                 if hasattr(inst, 'onInvokeFlowTimeout'):
-                    txt_projectid = to_str(projectid, inst.encoding).strip('\x00')
                     packInfo = PackInfo(head)
+                    txt_projectid = to_str(projectid, 'cp936').strip('\x00')
                     inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
+            else:
+                if hasattr(inst, 'onInvokeFlowError'):
+                    packInfo = PackInfo(head)
+                    txt_projectid = to_str(projectid, 'cp936').strip('\x00')
+                    inst.onInvokeFlowError(packInfo, txt_projectid, invoke_id, ret)
     
     @classmethod
     def __invokeflow_ack_cb(cls, arg, local_clientid, head, projectid, invoke_id, ack, msg):
@@ -341,6 +346,9 @@ class Client(object):
     # @param invokeId 调用ID。它对应于该对象的 @ref invokeFlow "invokeFlow() 方法"返回值
     # @see PackInfo
     def onInvokeFlowTimeout(self, packInfo, project, invokeId):
+        pass
+
+    def onInvokeFlowError(self, packInfo, project, invokeId, errno):
         pass
 
     # # 释放客户端
