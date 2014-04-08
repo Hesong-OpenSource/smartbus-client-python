@@ -54,7 +54,7 @@ def start_server(*args, **kwargs):
         print('connect error:', unitId, errno)
         
     def on_receive(packInfo, txt):
-        cli.sendText(9, 9, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
+        cli.send(9, 9, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
     
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         print('flow respond:', packInfo, project, invokeId, result)
@@ -62,8 +62,9 @@ def start_server(*args, **kwargs):
     def onInvokeFlowTimeout(packInfo, project, invokeId):
         print('flow timeout:', packInfo, project, invokeId)
     
-    lib_file = '''E:\My Projects\TK ClientsServiceSystem\smartbus\lib\windows-msc1600-x86\smartbus_net_cli.dll'''
-    smartbus.netclient.Client.initialize(program_args.unitid, libraryfile=lib_file)
+    #lib_file = '''E:\My Projects\TK ClientsServiceSystem\smartbus\lib\windows-msc1600-x86\smartbus_net_cli.dll'''
+    #smartbus.netclient.Client.initialize(program_args.unitid, libraryfile=lib_file)
+    smartbus.netclient.Client.initialize(program_args.unitid)
     cli = smartbus.netclient.Client(program_args.clientid, program_args.clienttype, program_args.host, program_args.port)
     assert(cli)
 

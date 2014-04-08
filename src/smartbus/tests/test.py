@@ -28,7 +28,7 @@ if __name__ == '__main__':
         print('onConnectFail', unitId, errno)
     
     smartbus.netclient.Client.initialize(17)
-    cli = smartbus.netclient.Client(localClientId=0, localClientType=20, masterHost='192.168.5.10', masterPort=8089, encoding='utf-8')
+    cli = smartbus.netclient.Client(localClientId=0, localClientType=20, masterHost='10.4.62.45', masterPort=8089, encoding='utf-8')
     cli.onConnectSuccess = onConnectSuccess
     cli.onReceiveText = onReceiveText
     cli.onConnectFail = onConnectFail
