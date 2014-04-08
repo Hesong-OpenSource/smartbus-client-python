@@ -213,16 +213,16 @@ class Client(object):
                 inst.onInvokeFlowAcknowledge(packInfo, txt_projectid, invoke_id, ack, txt_msg)
                    
     @classmethod
-    def __global_connect_cb(cls, arg, unitid, clientid, clienttype, status, ext_info):
+    def __global_connect_cb(cls, arg, unitid, clientid, clienttype, accessunit, status, ext_info):
         if callable(cls.__onglobalconnect):
             if sys.version_info[0] < 3:
                 if len(cls.__instances) > 0:
                     for v in cls.__instances.values():
                         inst = v
                         break                 
-                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info, 'cp936'))
+                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
             else:
-                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(status), to_str(ext_info, 'cp936'))
+                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
                 
     @classmethod
     def __trace_cb(cls, msg):
