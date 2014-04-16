@@ -84,23 +84,34 @@ class Client(object):
         cls._clienttype = clienttype
         cls.__logging_option = logging_option
         cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
+        cls.__logger.info('initialize')
         if cls.__lib:
             raise errors.AlreadyInitializedError()
         if not libraryfile:
             libraryfile = sbicif.lib_filename
         try:
-            cls.__lib = sbicif.load_lib(libraryfile)
+            fpath = libraryfile
+            cls.__logger.warn('load %s', fpath)
+            cls.__lib = sbicif.load_lib(fpath)
         except:
             try:
-                cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile))
+                fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile)
+                cls.__logger.warn('load %s', fpath)
+                cls.__lib = sbicif.load_lib(fpath)
             except:
                 try:
-                    cls.__lib = sbicif.load_lib(os.path.join(os.getcwd(), libraryfile))    
+                    fpath = os.path.join(os.getcwd(), libraryfile)
+                    cls.__logger.warn('load %s', fpath)
+                    cls.__lib = sbicif.load_lib(fpath)    
                 except:
                     try:
-                        cls.__lib = sbicif.load_lib(os.path.join(os.path.curdir, libraryfile))
+                        fpath = os.path.join(os.path.curdir, libraryfile)
+                        cls.__logger.warn('load %s', fpath)
+                        cls.__lib = sbicif.load_lib(fpath)
                     except:
-                        cls.__lib = sbicif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile))
+                        fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile)
+                        cls.__logger.warn('load %s', fpath)
+                        cls.__lib = sbicif.load_lib(fpath)
         errors.check_restval(sbicif._c_fn_Init(clienttype, clientid))
         cls.__c_fn_connection_cb = sbicif._c_fntyp_connection_cb(cls.__connection_cb)
         cls.__c_fn_recvdata_cb = sbicif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
@@ -222,14 +233,13 @@ class Client(object):
     @classmethod
     def __global_connect_cb(cls, arg, unitid, clientid, clienttype, accessunit, status, ext_info):
         if callable(cls.__onglobalconnect):
-            if sys.version_info[0] < 3:
-                if len(cls.__instances) > 0:
-                    for v in cls.__instances.values():
-                        inst = v
-                        break
-                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
-            else:
-                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+#             if sys.version_info[0] < 3:
+#                 if cls.__instance:
+#                     inst = cls.__instance
+#                     cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+#             else:
+#                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
                 
     @classmethod
     def __trace_cb(cls, msg):

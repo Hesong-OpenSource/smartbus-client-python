@@ -19,6 +19,7 @@ It defines classes_and_methods
 
 import sys
 import os
+import time
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -48,7 +49,11 @@ def start_server(*args, **kwargs):
     import smartbus.netclient
     
     def on_connect_ok(unitId):
+        print('>>> on_connect_ok')
         print('connected!', unitId)
+        print('sleep')
+        time.sleep(5)
+        print('<<< on_connect_ok')
         
     def on_connect_err(unitId, errno):
         print('connect error:', unitId, errno)
@@ -75,9 +80,13 @@ def start_server(*args, **kwargs):
     cli.onInvokeFlowTimeout = onInvokeFlowTimeout
 
     print('connecting...')
-    cli.connect()    
+    cli.connect()  
+    print('running...')
     while True:
-        readln()
+        print('readln...')
+        s = readln()
+        print('readln:', s)
+    print('end of while')
     
 
 class CLIError(Exception):

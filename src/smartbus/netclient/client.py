@@ -84,21 +84,32 @@ class Client(object):
 #            raise TypeError('The argument "unit" should be an integer')
         cls.__logging_option = logging_option
         cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
+        cls.__logger.info('initialize')
         if not libraryfile:
             libraryfile = sbncif.lib_filename
         try:
-            cls.__lib = sbncif.load_lib(libraryfile)
+            fpath = libraryfile
+            cls.__logger.warn('load %s', fpath)
+            cls.__lib = sbncif.load_lib(fpath)
         except:
             try:
-                cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile))
+                fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile)
+                cls.__logger.warn('load %s', fpath)
+                cls.__lib = sbncif.load_lib(fpath)
             except:
                 try:
-                    cls.__lib = sbncif.load_lib(os.path.join(os.getcwd(), libraryfile))
+                    fpath = os.path.join(os.getcwd(), libraryfile)
+                    cls.__logger.warn('load %s', fpath)
+                    cls.__lib = sbncif.load_lib(fpath)
                 except:
                     try:
-                        cls.__lib = sbncif.load_lib(os.path.join(os.path.curdir, libraryfile))
+                        fpath = os.path.join(os.path.curdir, libraryfile)
+                        cls.__logger.warn('load %s', fpath)
+                        cls.__lib = sbncif.load_lib(fpath)
                     except:
-                        cls.__lib = sbncif.load_lib(os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile))
+                        fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile)
+                        cls.__logger.warn('load %s', fpath)
+                        cls.__lib = sbncif.load_lib(fpath)
         errors.check_restval(sbncif._c_fn_Init(unitid))
         cls.__unitid = unitid
         cls.__onglobalconnect = onglobalconnect
@@ -215,14 +226,17 @@ class Client(object):
     @classmethod
     def __global_connect_cb(cls, arg, unitid, clientid, clienttype, accessunit, status, ext_info):
         if callable(cls.__onglobalconnect):
-            if sys.version_info[0] < 3:
-                if len(cls.__instances) > 0:
-                    for v in cls.__instances.values():
-                        inst = v
-                        break                 
-                    cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
-            else:
-                cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+#             if sys.version_info[0] < 3:
+#                 inst = None
+#                 if len(cls.__instances) > 0:
+#                     for v in cls.__instances.values():
+#                         inst = v
+#                         break
+#                     if inst:            
+#                         cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+#             else:
+#                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
                 
     @classmethod
     def __trace_cb(cls, msg):
