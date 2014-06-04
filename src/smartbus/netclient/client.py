@@ -7,7 +7,6 @@
 
 from __future__ import absolute_import
 
-import sys
 import os
 import platform
 import logging
@@ -89,26 +88,26 @@ class Client(object):
             libraryfile = sbncif.lib_filename
         try:
             fpath = libraryfile
-            cls.__logger.warn('load %s', fpath)
+            cls.__logger.warn(u'load %s', fpath)
             cls.__lib = sbncif.load_lib(fpath)
         except:
             try:
                 fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile)
-                cls.__logger.warn('load %s', fpath)
+                cls.__logger.warn(u'load %s', fpath)
                 cls.__lib = sbncif.load_lib(fpath)
             except:
                 try:
                     fpath = os.path.join(os.getcwd(), libraryfile)
-                    cls.__logger.warn('load %s', fpath)
+                    cls.__logger.warn(u'load %s', fpath)
                     cls.__lib = sbncif.load_lib(fpath)
                 except:
                     try:
                         fpath = os.path.join(os.path.curdir, libraryfile)
-                        cls.__logger.warn('load %s', fpath)
+                        cls.__logger.warn(u'load %s', fpath)
                         cls.__lib = sbncif.load_lib(fpath)
                     except:
                         fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile)
-                        cls.__logger.warn('load %s', fpath)
+                        cls.__logger.warn(u'load %s', fpath)
                         cls.__lib = sbncif.load_lib(fpath)
         errors.check_restval(sbncif._c_fn_Init(unitid))
         cls.__unitid = unitid
@@ -430,14 +429,12 @@ class Client(object):
     # @param parameters 流程传入参数
     # @param isNeedReturn 是否需要流程返回值
     # @param timeout 等待流程返回超时值，单位为秒。
-    # @param encoding 文本的编码。默认为该对象的 @ref encoding 属性。
     # @return 当需要等待流程返回值时，该返回值是@ref onInvokeFlowRespond "流程返回事件"中对应的ID.
-    def invokeFlow(self, server, process, project, flow, parameters=[], isNeedReturn=True, timeout=30, encoding=None):
-        encoding = encoding if encoding else self.encoding
+    def invokeFlow(self, server, process, project, flow, parameters=[], isNeedReturn=True, timeout=30):
         c_server_unitid = c_int(server)
         c_processindex = c_int(process)
-        c_project_id = c_char_p(to_bytes(project, encoding))
-        c_flowid = c_char_p(to_bytes(flow, encoding))
+        c_project_id = c_char_p(to_bytes(project, 'cp936'))
+        c_flowid = c_char_p(to_bytes(flow, 'cp936'))
         c_invoke_mode = c_int(0) if isNeedReturn else c_int(1)
         c_timeout = c_int(int(timeout * 1000))
         if parameters is None:
@@ -447,7 +444,7 @@ class Client(object):
                 parameters = [parameters]
             else:
                 parameters = list(parameters)
-        c_in_valuelist = c_char_p(to_bytes(str(parameters), encoding))
+        c_in_valuelist = c_char_p(to_bytes(str(parameters), 'cp936'))
         result = sbncif._c_fn_RemoteInvokeFlow(
             self.__c_localClientId,
             c_server_unitid,
