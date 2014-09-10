@@ -474,3 +474,23 @@ class Client(object):
             c_int(data_sz)
         )
         errors.check_restval(result)
+        
+    def sendNotify(self, server, process, project, title, mode, expires, param):
+        c_server_unitid = c_int(server)
+        c_processindex = c_int(process)
+        c_project_id = c_char_p(to_bytes(project, 'cp936'))
+        c_title = c_char_p(to_bytes(title, 'cp936'))
+        c_mode = c_int(0) if mode else c_int(1)
+        c_expires = c_int(int(expires * 1000))
+        c_param = c_char_p(to_bytes(param, 'cp936'))
+        result = sbncif._c_fn_SendNotify(
+            self.__c_localClientId,
+            c_server_unitid,
+            c_processindex,
+            c_project_id,
+            c_title,
+            c_mode,
+            c_expires,
+            c_param
+        )
+        errors.check_restval(result)
