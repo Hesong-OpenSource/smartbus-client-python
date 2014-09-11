@@ -41,7 +41,7 @@ class Client(object):
     # @param extInfo 附加信息
     # @param encoding 收/发字符串时使用的编码。默认为 @ref smartbus.utils.default_encoding
     # @see localClientId @see localClientType @see masterHost @see masterPort @see slaverHost @see slaverPort @see authorUsr @see authorPwd @see extInfo @see encoding
-    def __init__(self, localClientId, localClientType, masterHost, masterPort, slaverHost=None, slaverPort=0, authorUsr=None, authorPwd=None, extInfo=None, encoding=default_encoding):
+    def __init__(self, localClientId, localClientType, masterHost, masterPort, slaverHost=None, slaverPort=0xffff, authorUsr=None, authorPwd=None, extInfo=None, encoding=default_encoding):
         if not Client.isInitialized():
             raise errors.NotInitializedError()
         cls = type(self)
