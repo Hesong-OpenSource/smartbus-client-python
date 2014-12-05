@@ -1,27 +1,22 @@
-ipcclient Package
-=================
+smartbus.ipcclient package
+==========================
 
-:mod:`ipcclient` Package
-------------------------
+Submodules
+----------
 
-.. automodule:: smartbus.ipcclient
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`_c_smartbus_ipccli_interface` Module
-------------------------------------------
-
-.. automodule:: smartbus.ipcclient._c_smartbus_ipccli_interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`client` Module
---------------------
+smartbus.ipcclient.client module
+--------------------------------
 
 .. automodule:: smartbus.ipcclient.client
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: smartbus.ipcclient
+    :members:
+    :undoc-members:
+    :show-inheritance:

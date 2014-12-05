@@ -47,7 +47,7 @@ ifnone = lambda a, b: b if a is None else a
 如果：
 
 .. code::
-    
+
     v1 = None
     v2 = 2
     ifnone(v1, v2)
@@ -58,7 +58,7 @@ ifnone = lambda a, b: b if a is None else a
 if sys.version_info[0] < 3:
     def to_bytes(s, encoding=default_encoding):
         '''将 `str` 转为 `bytes`
-        
+
         :param s: 要转换的字符串
         :type s: str, unicode, bytes, None
         :param encoding: 编码，默认为系统编码。
@@ -69,9 +69,10 @@ if sys.version_info[0] < 3:
             return s.encode(encoding)
         else:
             raise TypeError()
+
     def to_unicode(s, encoding=default_encoding):
         '''将 `str` 转为 `unicode`
-        
+
         :param s: 要转换的字符串
         :type s: str, unicode, bytes, None
         :param encoding: 编码，默认为系统编码。
@@ -87,9 +88,10 @@ if sys.version_info[0] < 3:
     '''
 else:
     unicode = str
+
     def to_bytes(s, encoding=default_encoding):
         '''将 `str` 转为 `bytes`
-        
+
         :param s: 要转换的字符串
         :type s: str, unicode, bytes, None
         :param encoding: 编码，默认为系统编码。
@@ -100,9 +102,10 @@ else:
             return s.encode(encoding)
         else:
             raise TypeError()
+
     def to_unicode(s, encoding=default_encoding):
         '''将 `str` 转为 `unicode`
-        
+
         :param s: 要转换的字符串
         :type s: str, unicode, bytes, None
         :param encoding: 编码，默认为系统编码。
@@ -113,6 +116,7 @@ else:
             return s.decode(encoding)
         else:
             raise TypeError()
+
     to_str = to_unicode
     '''将 `unicode` 或者 `bytes` 转为系统 `str`
     '''

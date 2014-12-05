@@ -12,12 +12,13 @@ from __future__ import absolute_import, print_function
 
 import sys
 import os
+
 from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char_p, c_ushort, c_long
 
 from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
 
-# # smartbus IPC 客户端默认的共享/动态库文件名 
-#
+
+# smartbus IPC 客户端默认的共享/动态库文件名
 # 在POSIX系统下，默认是 libbusnetcli.so。
 # 在WINNT系统下，默认是 smartbus_net_cli.dll。
 if os.name in ('posix'):
@@ -85,8 +86,9 @@ _paramflags_SendNotify = (1, 'local_clientid', c_byte), (1, 'server_unitid', c_i
 #===============================================================================
 def load_lib(filepath=lib_filename):
     '''加载共享/动态库
-    
+
     :param filepath: 动态/共享库文件名
+    :return: 动态/共享库对象
     '''
     if not filepath:
         filepath = lib_filename
@@ -120,4 +122,3 @@ def load_lib(filepath=lib_filename):
             print(filepath, e, file=sys.stdout)
             raise
     return _lib
-

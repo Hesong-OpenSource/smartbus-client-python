@@ -1,37 +1,5 @@
-smartbus Package
+smartbus package
 ================
-
-:mod:`smartbus` Package
------------------------
-
-.. automodule:: smartbus
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`_c_smartbus` Module
--------------------------
-
-.. automodule:: smartbus._c_smartbus
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`errors` Module
---------------------
-
-.. automodule:: smartbus.errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`utils` Module
--------------------
-
-.. automodule:: smartbus.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Subpackages
 -----------
@@ -41,3 +9,30 @@ Subpackages
     smartbus.ipcclient
     smartbus.netclient
 
+Submodules
+----------
+
+smartbus.errors module
+----------------------
+
+.. automodule:: smartbus.errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+smartbus.utils module
+---------------------
+
+.. automodule:: smartbus.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: smartbus
+    :members:
+    :undoc-members:
+    :show-inheritance:

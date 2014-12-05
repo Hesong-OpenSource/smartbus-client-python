@@ -25,12 +25,12 @@ elif os.name in ("nt", "ce"):
     '''smartbus IPC 客户端默认的共享/动态库文件名。在WINNT系统下，默认是 busipccli.dll。'''
 else:
     raise NotImplementedError('Unsupported OS name "{}"'.format(os.name))
-    
-# # 共享/动态库
+
+# 共享/动态库
 _lib = None
 
-# # @name 库函数
-# # @{
+
+# 库函数
 
 _c_fn_Init = None
 _c_fn_Release = None
@@ -42,10 +42,8 @@ _c_fn_SendPing = None
 _c_fn_SetTraceStr = None
 _c_fn_SetCallBackFnEx = None
 
-# # @}
 
-# # @name 库函数类型
-# # @{
+# 库函数类型
 
 _c_fntyp_Init = CFUNCTYPE(c_int, c_int, c_int)
 _paramflags_Init = (1, 'clienttype', 0), (1, 'clientid', 0)
@@ -74,13 +72,12 @@ _paramflags_SetTraceStr = (1, 'tracestr', _c_fntyp_trace_str_cb), (1, 'traceerr'
 _c_fntyp_SetCallBackFnEx = CFUNCTYPE(None, c_char_p, c_void_p)
 _paramflags_SetCallBackFnEx = (1, 'callback_name', c_char_p), (1, 'callbackfn', c_void_p)
 
-# # @}
 
-# # 加载共享/动态库
 def load_lib(filepath=lib_filename):
     '''加载共享/动态库
-    
+
     :param filepath: 动态/共享库文件名
+    :return: 动态/共享库对象
     '''
     if not filepath:
         filepath = lib_filename

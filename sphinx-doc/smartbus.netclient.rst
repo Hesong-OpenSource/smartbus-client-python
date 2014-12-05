@@ -1,27 +1,22 @@
-netclient Package
-=================
+smartbus.netclient package
+==========================
 
-:mod:`netclient` Package
-------------------------
+Submodules
+----------
 
-.. automodule:: smartbus.netclient
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`_c_smartbus_netcli_interface` Module
-------------------------------------------
-
-.. automodule:: smartbus.netclient._c_smartbus_netcli_interface
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`client` Module
---------------------
+smartbus.netclient.client module
+--------------------------------
 
 .. automodule:: smartbus.netclient.client
     :members:
     :undoc-members:
     :show-inheritance:
 
+
+Module contents
+---------------
+
+.. automodule:: smartbus.netclient
+    :members:
+    :undoc-members:
+    :show-inheritance:
