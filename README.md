@@ -20,6 +20,8 @@ https://github.com/Hesong-OpenSource/smartbus-client-sdk
 
 # 安装
 
+访问 https://pypi.python.org/pypi/smartbus-client-python 获取包信息
+
 ## 通过 PYPI 在线安装
 
 ```sh
