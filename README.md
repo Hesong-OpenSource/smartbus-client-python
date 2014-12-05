@@ -18,3 +18,16 @@ http://smartbus-client-python.readthedocs.org/
 ## SmartBus C语言实现客户端
 https://github.com/Hesong-OpenSource/smartbus-client-sdk
 
+# 安装
+
+## 通过 PYPI 在线安装
+
+```sh
+pip install smartbus-client-python
+```
+
+## 下载后离线安装
+下载程序包，解压，然后执行:
+
+    python setup.py
+
