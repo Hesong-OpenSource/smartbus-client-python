@@ -32,8 +32,7 @@ https://github.com/Hesong-OpenSource/smartbus-client-sdk
 
 ::
 
-	pip install smartbus-client-python
-
+    pip install smartbus-client-python
 
 下载离线安装包
 ===============
@@ -42,8 +41,7 @@ https://github.com/Hesong-OpenSource/smartbus-client-sdk
 
     python setup.py
 
-
 .. attention::
 
-	在安装好 Python 程序包之后，还需要下载目标平台的动态/共享库，并将DLL或者SO文件复制到运行目录。
-	访问 https://github.com/Hesong-OpenSource/smartbus-client-sdk 可下载库文件
+    在安装好 Python 程序包之后，还需要下载目标平台的动态/共享库，并将DLL或者SO文件复制到运行目录。
+    访问 https://github.com/Hesong-OpenSource/smartbus-client-sdk 可下载库文件

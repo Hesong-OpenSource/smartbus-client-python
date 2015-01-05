@@ -20,7 +20,9 @@ from .._c_smartbus import PackInfo, SMARTBUS_ERR_OK, SMARTBUS_NODECLI_TYPE_IPSC,
 from ..utils import default_encoding, to_str, to_bytes
 from .. import errors
 
+
 class Client(object):
+
     '''SmartBus Network 客户端类
 
     这个类封装了 SmartBus Network 客户端的一系列方法与事件
@@ -62,14 +64,17 @@ class Client(object):
         self.__encoding = encoding
         self.__c_localClientId = c_byte(self.__localClientId)
         self.__c_localClientType = c_long(self.__localClientType)
-        self.__c_masterHost = c_char_p(to_bytes(self.__masterHost, self.encoding))
+        self.__c_masterHost = c_char_p(
+            to_bytes(self.__masterHost, self.encoding))
         self.__c_masterPort = c_ushort(self.__masterPort)
-        self.__c_slaverHost = c_char_p(to_bytes(self.__slaverHost, self.encoding))
+        self.__c_slaverHost = c_char_p(
+            to_bytes(self.__slaverHost, self.encoding))
         self.__c_slaverPort = c_ushort(self.__slaverPort)
-        self.__c_authorUsr = c_char_p(to_bytes(self.__authorUsr, self.encoding))
-        self.__c_authorPwd = c_char_p(to_bytes(self.__authorPwd, self.encoding))
+        self.__c_authorUsr = c_char_p(
+            to_bytes(self.__authorUsr, self.encoding))
+        self.__c_authorPwd = c_char_p(
+            to_bytes(self.__authorPwd, self.encoding))
         self.__c_extInfo = c_char_p(to_bytes(self.__extInfo, self.encoding))
-
 
     @classmethod
     def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename, logging_option=(True, logging.DEBUG, logging.ERROR)):
@@ -87,7 +92,8 @@ class Client(object):
 #        if not isinstance(unitid, int):
 #            raise TypeError('The argument "unit" should be an integer')
         cls.__logging_option = logging_option
-        cls.__logger = logging.getLogger('{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
+        cls.__logger = logging.getLogger('{}.{}'.format(
+            cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
         cls.__logger.info('initialize')
         if not libraryfile:
             libraryfile = sbncif.lib_filename
@@ -97,7 +103,8 @@ class Client(object):
             cls.__lib = sbncif.load_lib(fpath)
         except:
             try:
-                fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile)
+                fpath = os.path.join(os.path.dirname(os.path.abspath(
+                    __file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile)
                 cls.__logger.warn(u'load %s', fpath)
                 cls.__lib = sbncif.load_lib(fpath)
             except:
@@ -111,18 +118,24 @@ class Client(object):
                         cls.__logger.warn(u'load %s', fpath)
                         cls.__lib = sbncif.load_lib(fpath)
                     except:
-                        fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)), libraryfile)
+                        fpath = os.path.join(
+                            os.path.dirname(os.path.abspath(__file__)), libraryfile)
                         cls.__logger.warn(u'load %s', fpath)
                         cls.__lib = sbncif.load_lib(fpath)
         errors.check_restval(sbncif._c_fn_Init(unitid))
         cls.__unitid = unitid
         cls.__onglobalconnect = onglobalconnect
-        cls.__c_fn_connection_cb = sbncif._c_fntyp_connection_cb(cls.__connection_cb)
+        cls.__c_fn_connection_cb = sbncif._c_fntyp_connection_cb(
+            cls.__connection_cb)
         cls.__c_fn_recvdata_cb = sbncif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
-        cls.__c_fn_disconnect_cb = sbncif._c_fntyp_disconnect_cb(cls.__disconnect_cb)
-        cls.__c_fn_invokeflow_ret_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ret_cb)
-        cls.__c_fn_invokeflow_ack_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls.__invokeflow_ack_cb)
-        cls.__c_fn_global_connect_cb = sbncif._c_fntyp_global_connect_cb(cls.__global_connect_cb)
+        cls.__c_fn_disconnect_cb = sbncif._c_fntyp_disconnect_cb(
+            cls.__disconnect_cb)
+        cls.__c_fn_invokeflow_ret_cb = sbncif._c_fntyp_invokeflow_ret_cb(
+            cls.__invokeflow_ret_cb)
+        cls.__c_fn_invokeflow_ack_cb = sbncif._c_fntyp_invokeflow_ret_cb(
+            cls.__invokeflow_ack_cb)
+        cls.__c_fn_global_connect_cb = sbncif._c_fntyp_global_connect_cb(
+            cls.__global_connect_cb)
         sbncif._c_fn_SetCallBackFn(
             cls.__c_fn_connection_cb,
             cls.__c_fn_recvdata_cb,
@@ -131,11 +144,14 @@ class Client(object):
             cls.__c_fn_global_connect_cb,
             c_void_p(None)
         )
-        sbncif._c_fn_SetCallBackFnEx(c_char_p(b"smartbus_invokeflow_ack_cb"), cls.__c_fn_invokeflow_ack_cb)
+        sbncif._c_fn_SetCallBackFnEx(
+            c_char_p(b"smartbus_invokeflow_ack_cb"), cls.__c_fn_invokeflow_ack_cb)
         if logging_option[0]:
             cls.__c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls.__trace_cb)
-            cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(cls.__traceerr_cb)
-            sbncif._c_fn_SetTraceStr(cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
+            cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(
+                cls.__traceerr_cb)
+            sbncif._c_fn_SetTraceStr(
+                cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
 
     @classmethod
     def finalize(cls):
@@ -173,7 +189,7 @@ class Client(object):
             if hasattr(inst, 'onDisconnect'):
                 inst.onDisconnect()
 
-    # # @todo: TODO: 广播的处理
+    # @todo: TODO: 广播的处理
     @classmethod
     def __recvdata_cb(cls, param, local_clientid, head, data, size):
         inst = cls.__instances.get(local_clientid, None)
@@ -206,17 +222,20 @@ class Client(object):
                         py_param = json.loads(txt_param)
                     else:
                         py_param = None
-                    inst.onInvokeFlowRespond(packInfo, txt_projectid, invoke_id, py_param)
+                    inst.onInvokeFlowRespond(
+                        packInfo, txt_projectid, invoke_id, py_param)
             elif ret == SMARTBUS_ERR_TIMEOUT:
                 if hasattr(inst, 'onInvokeFlowTimeout'):
                     packInfo = PackInfo(head)
                     txt_projectid = to_str(projectid, 'cp936').strip('\x00')
-                    inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
+                    inst.onInvokeFlowTimeout(
+                        packInfo, txt_projectid, invoke_id)
             else:
                 if hasattr(inst, 'onInvokeFlowError'):
                     packInfo = PackInfo(head)
                     txt_projectid = to_str(projectid, 'cp936').strip('\x00')
-                    inst.onInvokeFlowError(packInfo, txt_projectid, invoke_id, ret)
+                    inst.onInvokeFlowError(
+                        packInfo, txt_projectid, invoke_id, ret)
 
     @classmethod
     def __invokeflow_ack_cb(cls, arg, local_clientid, head, projectid, invoke_id, ack, msg):
@@ -226,22 +245,24 @@ class Client(object):
                 packInfo = PackInfo(head)
                 txt_projectid = to_str(projectid, 'cp936').strip('\x00')
                 txt_msg = to_str(msg, 'cp936').strip('\x00')
-                inst.onInvokeFlowAcknowledge(packInfo, txt_projectid, invoke_id, ack, txt_msg)
+                inst.onInvokeFlowAcknowledge(
+                    packInfo, txt_projectid, invoke_id, ack, txt_msg)
 
     @classmethod
     def __global_connect_cb(cls, arg, unitid, clientid, clienttype, accessunit, status, ext_info):
         if callable(cls.__onglobalconnect):
-#             if sys.version_info[0] < 3:
-#                 inst = None
-#                 if len(cls.__instances) > 0:
-#                     for v in cls.__instances.values():
-#                         inst = v
-#                         break
-#                     if inst:
-#                         cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
-#             else:
-#                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
-            cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            #             if sys.version_info[0] < 3:
+            #                 inst = None
+            #                 if len(cls.__instances) > 0:
+            #                     for v in cls.__instances.values():
+            #                         inst = v
+            #                         break
+            #                     if inst:
+            #                         cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            #             else:
+            #                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(
+                accessunit), ord(status), to_str(ext_info, 'cp936'))
 
     @classmethod
     def __trace_cb(cls, msg):
@@ -465,7 +486,7 @@ class Client(object):
         if parameters is None:
             parameters = []
         else:
-            if isinstance(parameters, (int, float, str, bool , dict)):
+            if isinstance(parameters, (int, float, str, bool, dict)):
                 parameters = [parameters]
             else:
                 parameters = list(parameters)
@@ -488,7 +509,7 @@ class Client(object):
 
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
         '''发送PING命令
-        
+
         :param int dstUnitId: 目标的smartbus单元ID
         :param int dstClientId: 目标的smartbus客户端ID
         :param int dstClientType: 目标的smartbus客户端类型
@@ -510,12 +531,12 @@ class Client(object):
 
     def sendNotify(self, server, process, project, title, mode, expires, param):
         '''发送通知消息
-        
+
         :param int server:  目标IPSC服务器smartbus单元ID
         :param int process: IPSC进程ID，同时也是该IPSC进程的 smartbus client-id
-        :param str project: 流程项目ID
+        :param str project: 流程项目ID。None或者空表示不指明特定流程
         :param str title:   通知的标示
-        :param int mode:    调用模式
+        :param int mode:    调用模式。目前无意义，一律使用0
         :param int expires: 消息有效期。单位ms
         :param str param:   消息数据
         :return: > 0 invoke_id，调用ID。< 0 表示错误。
@@ -538,4 +559,9 @@ class Client(object):
             c_expires,
             c_param
         )
-        errors.check_restval(result)
+        if result > 0:
+            return result
+        elif result < 0:
+            errors.check_restval(result)
+        else:
+            raise ValueError('SendNotify C API returns zero')
