@@ -3,15 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+###############################
 SmartBus client Python wrapper
-==========================================================
+###############################
 
-内容目录:
+*******
+内容
+*******
 
-.. include:: modules.rst
+.. toctree::
+   :maxdepth: 4
+   
+   自述 <readme>
+   APIs <modules>
 
+***********
 索引与表格
-==================
+***********
 
 * :ref:`genindex`
 * :ref:`modindex`

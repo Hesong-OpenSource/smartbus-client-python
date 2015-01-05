@@ -4,8 +4,8 @@
 
 使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
 
+:author: 刘雪彦
 :date: 2013-1-28
-:author: lxy@heosng.net
 '''
 
 from __future__ import absolute_import, print_function
@@ -41,6 +41,7 @@ _c_fn_RemoteInvokeFlow = None
 _c_fn_SendPing = None
 _c_fn_SetTraceStr = None
 _c_fn_SetCallBackFnEx = None
+_c_fn_SendNotify = None
 
 
 # 库函数类型
@@ -63,8 +64,8 @@ _paramflags_SendData = (1, 'cmd', c_byte), (1, 'cmdtype', c_byte), (1, 'dst_unit
 _c_fntyp_RemoteInvokeFlow = CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
 _paramflags_RemoteInvokeFlow = (1, 'server_unitid', c_int), (1, 'processindex', c_int), (1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (1, 'in_valuelist', c_char_p)
 
-_c_fntyp_SendPing = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_int, c_void_p, c_int)
-_paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
+_c_fntyp_SendPing = CFUNCTYPE(c_int, c_int, c_int, c_int, c_void_p, c_int)
+_paramflags_SendPing = (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
 
 _c_fntyp_SetTraceStr = CFUNCTYPE(None, _c_fntyp_trace_str_cb, _c_fntyp_trace_str_cb)
 _paramflags_SetTraceStr = (1, 'tracestr', _c_fntyp_trace_str_cb), (1, 'traceerr', _c_fntyp_trace_str_cb)
@@ -72,6 +73,8 @@ _paramflags_SetTraceStr = (1, 'tracestr', _c_fntyp_trace_str_cb), (1, 'traceerr'
 _c_fntyp_SetCallBackFnEx = CFUNCTYPE(None, c_char_p, c_void_p)
 _paramflags_SetCallBackFnEx = (1, 'callback_name', c_char_p), (1, 'callbackfn', c_void_p)
 
+_c_fntyp_SendNotify = CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
+_paramflags_SendNotify = (1, 'server_unitid', c_int), (1, 'processindex', c_int), (1, 'projectid', c_char_p), (1, 'title', c_char_p), (1, 'mode', int), (1, 'expires', c_int), (1, 'param', c_char_p)
 
 def load_lib(filepath=lib_filename):
     '''加载共享/动态库
@@ -103,6 +106,8 @@ def load_lib(filepath=lib_filename):
             _c_fn_SetTraceStr = _c_fntyp_SetTraceStr(('SmartBusIpcCli_SetTraceStr', _lib), _paramflags_SetTraceStr)
             global _c_fn_SetCallBackFnEx
             _c_fn_SetCallBackFnEx = _c_fntyp_SetCallBackFnEx(('SmartBusIpcCli_SetCallBackFnEx', _lib), _paramflags_SetCallBackFnEx)
+            global _c_fn_SendNotify
+            _c_fn_SendNotify = _c_fntyp_SendNotify(('SmartBusIpcCli_SendNotify', _lib), _paramflags_SendNotify)
         except Exception as e:
             if _lib:
                 _lib = None

@@ -4,8 +4,8 @@
 
 使用ctypes将C-API的函数与基本数据结构做一对一的翻译，没有进行更进一步的包装。
 
+:author: 刘雪彦
 :date: 2013-2-3
-:author: lxy@heosng.net
 '''
 
 from __future__ import absolute_import, print_function

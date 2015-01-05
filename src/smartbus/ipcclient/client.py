@@ -2,7 +2,7 @@
 
 '''smartbus 进程间通信客户端的Python接口类客户端类型
 
-:author: lxy@hesong.net
+:author: 刘雪彦
 :date: 2013-6-8
 '''
 
@@ -385,7 +385,7 @@ class Client(object):
         '''调用流程
 
         :param int server: IPSC流程服务所在节点
-        :param int process: IPSC进程索引值
+        :param int process: IPSC进程索引值，同时也是该IPSC进程的 smartbus client-id
         :param str project: 流程项目名称
         :param str flow: 流程名称
         :param parameters: 流程传入参数
@@ -426,15 +426,53 @@ class Client(object):
         return result
 
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
+        '''发送PING命令
+        
+        :param int dstUnitId: 目标的smartbus单元ID
+        :param int dstClientId: 目标的smartbus客户端ID
+        :param int dstClientType: 目标的smartbus客户端类型
+        :param str data: 要发送的数据
+        :param str encoding: 数据的编码。 默认值为None，表示使用 :attr:`smartbus.ipcclient.client.Client.encoding`
+        '''
         data = to_bytes(data, encoding if encoding else self.encoding)
         data_pc = create_string_buffer(data) if data else None
         data_sz = len(data_pc) if data_pc else 0
         result = sbicif._c_fn_SendPing(
-            self.__c_localClientId,
             c_int(dstUnitId),
             c_int(dstClientId),
             c_int(dstClientType),
             byref(data_pc),
             c_int(data_sz)
+        )
+        errors.check_restval(result)
+
+    def sendNotify(self, server, process, project, title, mode, expires, param):
+        '''发送通知消息
+        
+        :param int server:  目标IPSC服务器smartbus单元ID
+        :param int process: IPSC进程ID，同时也是该IPSC进程的 smartbus client-id
+        :param str project: 流程项目ID
+        :param str title:   通知的标示
+        :param int mode:    调用模式
+        :param int expires: 消息有效期。单位ms
+        :param str param:   消息数据
+        :return: > 0 invoke_id，调用ID。< 0 表示错误。
+        :rtype: int
+        '''
+        c_server_unitid = c_int(server)
+        c_processindex = c_int(process)
+        c_project_id = c_char_p(to_bytes(project, 'cp936'))
+        c_title = c_char_p(to_bytes(title, 'cp936'))
+        c_mode = c_int(0) if mode else c_int(1)
+        c_expires = c_int(int(expires * 1000))
+        c_param = c_char_p(to_bytes(param, 'cp936'))
+        result = sbicif._c_fn_SendNotify(
+            c_server_unitid,
+            c_processindex,
+            c_project_id,
+            c_title,
+            c_mode,
+            c_expires,
+            c_param
         )
         errors.check_restval(result)
