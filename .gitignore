@@ -8,12 +8,6 @@ src/.metadata/
 # smartbus cdll library files
 src/smartbus/cdll
 
-# doxygen documents
-doc/
-
-# sphinx documents
-sphinx-doc/_build
-
 
 ######################
 ## Python.gitignore ##
