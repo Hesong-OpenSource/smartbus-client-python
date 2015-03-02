@@ -469,7 +469,8 @@ class Client(object):
         :param str project: 流程项目ID
         :param str title:   通知的标示
         :param int mode:    调用模式。目前无意义，一律使用0
-        :param int expires: 消息有效期。单位ms
+        :param expires: 消息有效期。单位秒
+        :type expires: int, float
         :param str param:   消息数据
         :return: > 0 invoke_id，调用ID。< 0 表示错误。
         :rtype: int
