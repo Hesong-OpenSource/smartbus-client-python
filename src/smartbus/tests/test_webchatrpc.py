@@ -81,12 +81,12 @@ class Test(unittest.TestCase):
         _cli = cls._cli = Client(localClientId=0, local_client_type=25, master_host='10.4.62.45', master_port=8089,
                                  encoding='utf-8')
 
-        _cli.onConnectSuccess = connect_succeed
-        _cli.onConnectFail = connect_failed
-        _cli.onDisconnect = disconnected
-        _cli.onInvokeFlowRespond = flow_response
-        _cli.onInvokeFlowTimeout = flow_timeout
-        _cli.onReceiveText = onReceiveText
+        _cli.on_connect_success = connect_succeed
+        _cli.on_connect_fail = connect_failed
+        _cli.on_disconnect = disconnected
+        _cli.on_flow_resp = flow_response
+        _cli.on_flow_timeout = flow_timeout
+        _cli.on_receive_text = onReceiveText
 
         print('conneting...')
         cond_connect.acquire()
@@ -98,8 +98,8 @@ class Test(unittest.TestCase):
         cond = threading.Condition()
         cond.acquire()
         with self._recv_buf_lock:
-            flowid = self._cli.invokeFlow(0, 0, 'Project2', '_webchat_rpc',
-                                          {'method': 'RobotConnected', 'params': ['robot-001']}, True, 5)
+            flowid = self._cli.startup_flow(0, 0, 'Project2', '_webchat_rpc',
+                                            {'method': 'RobotConnected', 'params': ['robot-001']}, True, 5)
             pending = [cond, None]
             self._recv_buf[flowid] = pending
         cond.wait()

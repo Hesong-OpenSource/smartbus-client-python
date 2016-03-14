@@ -18,25 +18,25 @@ if __name__ == '__main__':
 
 
     def onConnectSuccess(unitId):
-        print('onConnectSuccess', unitId)
+        print('on_connect_success', unitId)
         global unit_id
         unit_id = unitId
 
 
     def onReceiveText(self, packInfo, txt):
-        print('onReceiveText', packInfo, txt)
+        print('on_receive_text', packInfo, txt)
 
 
     def onConnectFail(unitId, errno):
-        print('onConnectFail', unitId, errno)
+        print('on_connect_fail', unitId, errno)
 
 
     smartbus.netclient.Client.initialize(17)
     cli = smartbus.netclient.Client(localClientId=0, local_client_type=20, master_host='10.4.62.45', master_port=8089,
                                     encoding='utf-8')
-    cli.onConnectSuccess = onConnectSuccess
-    cli.onReceiveText = onReceiveText
-    cli.onConnectFail = onConnectFail
+    cli.on_connect_success = onConnectSuccess
+    cli.on_receive_text = onReceiveText
+    cli.on_connect_fail = onConnectFail
 
     print('connecting...')
     cli.connect()

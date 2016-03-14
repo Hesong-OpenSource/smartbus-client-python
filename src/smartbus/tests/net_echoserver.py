@@ -69,17 +69,17 @@ def start_server(*args, **kwargs):
         print('flow timeout:', packInfo, project, invokeId)
 
     # lib_file = """E:\My Projects\TK ClientsServiceSystem\smartbus\lib\windows-msc1600-x86\smartbus_net_cli.dll"""
-    # smartbus.netclient.Client.initialize(program_args.unitid, libraryfile=lib_file)
-    smartbus.netclient.Client.initialize(program_args.unitid)
+    # smartbus.netclient.Client.initialize(program_args.unit_id, libraryfile=lib_file)
+    smartbus.netclient.Client.initialize(program_args.unit_id)
     cli = smartbus.netclient.Client(program_args.clientid, program_args.clienttype, program_args.host,
                                     program_args.port)
     assert (cli)
 
-    cli.onConnectSuccess = on_connect_ok
-    cli.onConnectFail = on_connect_err
-    cli.onReceiveText = on_receive
-    cli.onInvokeFlowRespond = onInvokeFlowRespond
-    cli.onInvokeFlowTimeout = onInvokeFlowTimeout
+    cli.on_connect_success = on_connect_ok
+    cli.on_connect_fail = on_connect_err
+    cli.on_receive_text = on_receive
+    cli.on_flow_resp = onInvokeFlowRespond
+    cli.on_flow_timeout = onInvokeFlowTimeout
 
     print('connecting...')
     cli.connect()
@@ -139,7 +139,7 @@ USAGE
                             help="smartbus Server Host. [default: %(default)s]")
         parser.add_argument("-p", "--port", dest="port", type=int, default=8089,
                             help="smartbus Server Port. [default: %(default)s]")
-        parser.add_argument("-u", "--unitid-id", dest="unitid", type=int, default=15,
+        parser.add_argument("-u", "--unit_id-id", dest="unit_id", type=int, default=15,
                             help="smartbus IPC Unit ID")
         parser.add_argument("-c", "--client-id", dest="clientid", type=int, default=0,
                             help="smartbus IPC client ID. [default: %(default)s]")

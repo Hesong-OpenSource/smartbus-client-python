@@ -54,7 +54,7 @@ _c_fn_SendNotify = None
 # function type and param flags
 # ===============================================================================
 _c_fntyp_Init = CFUNCTYPE(c_int, c_byte)
-_paramflags_Init = (1, 'unitid', 0),
+_paramflags_Init = (1, 'unit_id', 0),
 
 _c_fntyp_Release = CFUNCTYPE(None)
 _paramflags_Release = ()

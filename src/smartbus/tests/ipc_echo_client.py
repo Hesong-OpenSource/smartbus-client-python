@@ -42,11 +42,11 @@ if __name__ == '__main__':
     client = smartbus.ipcclient.Client.instance()
     assert (client)
 
-    client.onConnectSuccess = on_connect_ok
-    client.onConnectFail = on_connect_err
-    client.onReceiveText = on_receive
-    client.onInvokeFlowRespond = onInvokeFlowRespond
-    client.onInvokeFlowTimeout = onInvokeFlowTimeout
+    client.on_connect_success = on_connect_ok
+    client.on_connect_fail = on_connect_err
+    client.on_receive_text = on_receive
+    client.on_flow_resp = onInvokeFlowRespond
+    client.on_flow_timeout = onInvokeFlowTimeout
     rt = client.connect()
     print('connect returns', rt)
 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         if s.strip().lower() in ('quit', 'exit'):
             break
         else:
-            rt = client.invokeFlow(0, 0, 'Project1', 'Flow1', s, timeout=20)
+            rt = client.startup_flow(0, 0, 'Project1', 'Flow1', s, timeout=20)
 
     print('finalize...')
     smartbus.ipcclient.Client.finalize()

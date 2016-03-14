@@ -104,12 +104,12 @@ if __name__ == '__main__':
     print('connect...')
     assert (client)
     print(client)
-    client.onConnectSuccess = on_connect_ok
-    client.onConnectFail = on_connect_err
-    client.onDisconnect = on_disconnect
-    client.onReceiveText = on_receive
-    #    client.onInvokeFlowRespond = onInvokeFlowRespond
-    #    client.onInvokeFlowTimeout = onInvokeFlowTimeout
+    client.on_connect_success = on_connect_ok
+    client.on_connect_fail = on_connect_err
+    client.on_disconnect = on_disconnect
+    client.on_receive_text = on_receive
+    #    client.on_flow_resp = on_flow_resp
+    #    client.on_flow_timeout = on_flow_timeout
     print('connecting')
     client.connect()
 

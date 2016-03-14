@@ -56,17 +56,17 @@ if __name__ == '__main__':
     cli = smartbus.netclient.Client(localClientId=0, local_client_type=25, master_host='10.4.62.45', master_port=8089,
                                     encoding='utf-8')
 
-    cli.onConnectSuccess = connect_succeed
-    cli.onConnectFail = connect_failed
-    cli.onDisconnect = disconnected
-    cli.onInvokeFlowRespond = flow_response
-    cli.onInvokeFlowTimeout = flow_timeout
+    cli.on_connect_success = connect_succeed
+    cli.on_connect_fail = connect_failed
+    cli.on_disconnect = disconnected
+    cli.on_flow_resp = flow_response
+    cli.on_flow_timeout = flow_timeout
 
     cli.connect()
 
-    cli.onReceiveText = onReceiveText
+    cli.on_receive_text = onReceiveText
 
     while True:
         s = readln()
         # cli.sendText(cmd=1, cmdType=1, dstUnitId=0, dstClientId=15, dstClientType=15, txt=s)
-        cli.invokeFlow(0, 0, 'Project2', '_webchat_rpc', {'method': 'RobotConnected', 'params': ['robot-001']}, True, 5)
+        cli.startup_flow(0, 0, 'Project2', '_webchat_rpc', {'method': 'RobotConnected', 'params': ['robot-001']}, True, 5)

@@ -74,11 +74,11 @@ def start_server(*args, **kwargs):
     cli = smartbus.ipcclient.Client.instance(extInfo='我是 ipc_echoserver')
     assert (cli)
     cli.connect()
-    cli.onConnectSuccess = on_connect_ok
-    cli.onConnectFail = on_connect_err
-    cli.onReceiveText = on_receive
-    cli.onInvokeFlowRespond = onInvokeFlowRespond
-    cli.onInvokeFlowTimeout = onInvokeFlowTimeout
+    cli.on_connect_success = on_connect_ok
+    cli.on_connect_fail = on_connect_err
+    cli.on_receive_text = on_receive
+    cli.on_flow_resp = onInvokeFlowRespond
+    cli.on_flow_timeout = onInvokeFlowTimeout
 
     while True:
         readln()

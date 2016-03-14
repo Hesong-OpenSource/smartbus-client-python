@@ -46,8 +46,8 @@ def run_echo_server(started_cond, term_cond):
     cond_connect.acquire()
 
     def ConnectSuccess(unitId):
-        logging.getLogger('ServerProcess').info('ConnectSuccess: unitid={}'.format(unitId))
-        print('ServerProcess: ConnectSuccess: unitid={}'.format(unitId))
+        logging.getLogger('ServerProcess').info('ConnectSuccess: unit_id={}'.format(unitId))
+        print('ServerProcess: ConnectSuccess: unit_id={}'.format(unitId))
         nonlocal _connected
         _connected = True
         cond_connect.acquire()
@@ -100,10 +100,10 @@ def run_echo_server(started_cond, term_cond):
 
     pass
 
-    client.onConnectSuccess = ConnectSuccess
-    client.onConnectFail = onConnectFail
-    client.onDisconnect = onDisconnect
-    client.onReceiveText = onReceiveText
+    client.on_connect_success = ConnectSuccess
+    client.on_connect_fail = onConnectFail
+    client.on_disconnect = onDisconnect
+    client.on_receive_text = onReceiveText
 
     print('ServerProcess: connecting...')
     client.connect()
@@ -151,7 +151,7 @@ class JsonRpcTest(unittest.TestCase):
             cond_connect.acquire()
 
             def ConnectSuccess(unitId):
-                logging.getLogger('MainProcess').info('ConnectSuccess: unitid={}'.format(unitId))
+                logging.getLogger('MainProcess').info('ConnectSuccess: unit_id={}'.format(unitId))
                 cls.is_connected = True
                 cls.unitid = unitId
                 cond_connect.acquire()
@@ -202,10 +202,10 @@ class JsonRpcTest(unittest.TestCase):
 
             pass
 
-            cls._client.onConnectSuccess = ConnectSuccess
-            cls._client.onConnectFail = onConnectFail
-            cls._client.onDisconnect = onDisconnect
-            cls._client.onReceiveText = onReceiveText
+            cls._client.on_connect_success = ConnectSuccess
+            cls._client.on_connect_fail = onConnectFail
+            cls._client.on_disconnect = onDisconnect
+            cls._client.on_receive_text = onReceiveText
 
             cls._client.connect()
             cond_connect.wait()
@@ -229,10 +229,10 @@ class JsonRpcTest(unittest.TestCase):
         cond.acquire()
         self._client.send(
             cmd=0,
-            cmdType=CMDTYPE_JSONRPC_REQ,
-            dstUnitId=SERVER_UNIT_ID,
-            dstClientId=0,
-            dstClientType=-1,
+            cmd_type=CMDTYPE_JSONRPC_REQ,
+            dst_unit_id=SERVER_UNIT_ID,
+            dst_client_id=0,
+            dst_client_type=-1,
             data=json.dumps({
                 'jsonrpc': jsonrpc_version,
                 'id': id_,
@@ -268,10 +268,10 @@ class JsonRpcTest(unittest.TestCase):
             try:
                 self._client.send(
                     cmd=0,
-                    cmdType=CMDTYPE_JSONRPC_REQ,
-                    dstUnitId=SERVER_UNIT_ID,
-                    dstClientId=0,
-                    dstClientType=-1,
+                    cmd_type=CMDTYPE_JSONRPC_REQ,
+                    dst_unit_id=SERVER_UNIT_ID,
+                    dst_client_id=0,
+                    dst_client_type=-1,
                     data=json.dumps({
                         'jsonrpc': jsonrpc_version,
                         'id': id_,

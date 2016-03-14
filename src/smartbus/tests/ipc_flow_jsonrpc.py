@@ -48,7 +48,7 @@ class FlowJsonRpcTest(unittest.TestCase):
             cond_connect.acquire()
 
             def ConnectSuccess(unitId):
-                print('ConnectSuccess: unitid={}'.format(unitId))
+                print('ConnectSuccess: unit_id={}'.format(unitId))
                 cls.is_connected = True
                 cls.unitid = unitId
                 cond_connect.acquire()
@@ -118,12 +118,12 @@ class FlowJsonRpcTest(unittest.TestCase):
 
             pass
 
-            self._client.onConnectSuccess = ConnectSuccess
-            self._client.onConnectFail = onConnectFail
-            self._client.onDisconnect = onDisconnect
-            self._client.onInvokeFlowRespond = onInvokeFlowRespond
-            self._client.onInvokeFlowTimeout = onInvokeFlowTimeout
-            self._client.onReceiveText = onReceiveText
+            self._client.on_connect_success = ConnectSuccess
+            self._client.on_connect_fail = onConnectFail
+            self._client.on_disconnect = onDisconnect
+            self._client.on_flow_resp = onInvokeFlowRespond
+            self._client.on_flow_timeout = onInvokeFlowTimeout
+            self._client.on_receive_text = onReceiveText
 
             self._client.connect()
             cond_connect.wait()
@@ -137,8 +137,8 @@ class FlowJsonRpcTest(unittest.TestCase):
     #         msg = 'Hello! 你好！'
     #         cond = threading.Condition()
     #         cond.acquire()
-    #         invoke_id = self._client.invokeFlow(
-    #             server=cls.unitid,
+    #         invoke_id = self._client.startup_flow(
+    #             server=cls.unit_id,
     #             process=0,
     #             project='Project1',
     #             flow='_agent_rpc',
@@ -167,8 +167,8 @@ class FlowJsonRpcTest(unittest.TestCase):
     #         msg = 'Hello! 你好！'
     #         cond = threading.Condition()
     #         cond.acquire()
-    #         invoke_id = self._client.invokeFlow(
-    #             server=cls.unitid,
+    #         invoke_id = self._client.startup_flow(
+    #             server=cls.unit_id,
     #             process=0,
     #             project='Project1',
     #             flow='_agent_rpc',
@@ -207,8 +207,8 @@ class FlowJsonRpcTest(unittest.TestCase):
             cond = threading.Condition()
             cond.acquire()
 
-            print('>>> test.Echo [{}] invokeFlow'.format(n))
-            invoke_id = self._client.invokeFlow(
+            print('>>> test.Echo [{}] startup_flow'.format(n))
+            invoke_id = self._client.startup_flow(
                 server=cls.unitid,
                 process=0,
                 project='Project1',
@@ -219,9 +219,9 @@ class FlowJsonRpcTest(unittest.TestCase):
                         'msg': msg
                     }
                 },
-                isNeedReturn=True,
+                is_resp=True,
             )
-            print('<<< test.Echo [{}] invokeFlow returns {}'.format(n, invoke_id))
+            print('<<< test.Echo [{}] startup_flow returns {}'.format(n, invoke_id))
 
             with cls.pending_lock:
                 pending = cls.pending_invokes[invoke_id] = [cond, None]
@@ -261,8 +261,8 @@ class FlowJsonRpcTest(unittest.TestCase):
 #             msg = 'Hello! 你好！ {}'.format(n)
 #             cond = threading.Condition()
 #             cond.acquire()
-#             invoke_id = self._client.invokeFlow(
-#                 server=cls.unitid,
+#             invoke_id = self._client.startup_flow(
+#                 server=cls.unit_id,
 #                 process=0,
 #                 project='Project1',
 #                 flow='_agent_rpc',

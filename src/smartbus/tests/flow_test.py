@@ -48,10 +48,10 @@ if __name__ == '__main__':
 
     cli = smartbus.netclient.Client(0, 13, '10.4.62.45', 8089, encoding='utf-8')
 
-    cli.onConnectSuccess = onConnectSuccess
-    cli.onReceiveText = onReceiveText
-    cli.onInvokeFlowRespond = onInvokeFlowRespond
-    cli.onInvokeFlowAcknowledge = onInvokeFlowAcknowledge
+    cli.on_connect_success = onConnectSuccess
+    cli.on_receive_text = onReceiveText
+    cli.on_flow_resp = onInvokeFlowRespond
+    cli.on_flow_ack = onInvokeFlowAcknowledge
 
     cli.connect()
 
@@ -65,4 +65,4 @@ if __name__ == '__main__':
             method='test.Echo',
             params=[s]
         )
-        cli.invokeFlow(0, 0, "Project1", "_agent_rpc", data);
+        cli.startup_flow(0, 0, "Project1", "_agent_rpc", data);

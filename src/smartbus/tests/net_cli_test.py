@@ -35,11 +35,11 @@ if __name__ == '__main__':
 
     cli = smartbus.netclient.Client(0, 15, '10.4.62.46', 8089)
 
-    cli.onConnectSuccess = onConnectSuccess
-    cli.onReceiveText = onReceiveText
+    cli.on_connect_success = onConnectSuccess
+    cli.on_receive_text = onReceiveText
 
     cli.connect()
 
     while True:
         s = readln()
-        cli.send(cmd=1, cmdType=1, dstUnitId=28, dstClientId=20, dstClientType=-1, data=s)
+        cli.send(cmd=1, cmd_type=1, dst_unit_id=28, dst_client_id=20, dst_client_type=-1, data=s)

@@ -175,22 +175,22 @@ class Client(object):
         inst._unitid = accesspoint_unitid
         inst._clientid = local_clientid
         if ack == 0:  # 连接成功
-            if callable(inst.onConnectSuccess):
-                inst.onConnectSuccess(accesspoint_unitid)
+            if callable(inst.on_connect_success):
+                inst.on_connect_success(accesspoint_unitid)
         else:  # 连接失败
-            if callable(inst.onConnectFail):
-                inst.onConnectFail(accesspoint_unitid, ack)
+            if callable(inst.on_connect_fail):
+                inst.on_connect_fail(accesspoint_unitid, ack)
 
     @classmethod
     def __disconnect_cb(cls, param, local_clientid):
         inst = cls.__instance
-        if callable(inst.onDisconnect):
-            inst.onDisconnect()
+        if callable(inst.on_disconnect):
+            inst.on_disconnect()
 
     @classmethod
     def __recvdata_cb(cls, param, local_clientid, head, data, size):
         inst = cls.__instance
-        if callable(inst.onReceiveText):
+        if callable(inst.on_receive_text):
             packInfo = PackInfo(head)
             txt = None
             if data:
@@ -203,13 +203,13 @@ class Client(object):
                         txt = to_str(bytestr, 'utf8')
                 else:
                     txt = to_str(bytestr, inst.encoding)
-                inst.onReceiveText(packInfo, txt)
+                inst.on_receive_text(packInfo, txt)
 
     @classmethod
     def __invokeflow_ret_cb(cls, arg, local_clientid, head, projectid, invoke_id, ret, param):
         inst = cls.__instance
         if ret == 1:
-            if callable(inst.onInvokeFlowRespond):
+            if callable(inst.on_flow_resp):
                 packInfo = PackInfo(head)
                 txt_projectid = to_str(projectid, 'cp936').strip('\x00')
                 txt_param = to_str(param, 'cp936').strip('\x00').strip()
@@ -217,28 +217,28 @@ class Client(object):
                     py_param = json.loads(txt_param)
                 else:
                     py_param = None
-                inst.onInvokeFlowRespond(
+                inst.on_flow_resp(
                     packInfo, txt_projectid, invoke_id, py_param)
         elif ret == SMARTBUS_ERR_TIMEOUT:
-            if callable(inst.onInvokeFlowTimeout):
+            if callable(inst.on_flow_timeout):
                 packInfo = PackInfo(head)
                 txt_projectid = to_str(projectid, 'cp936').strip('\x00')
-                inst.onInvokeFlowTimeout(packInfo, txt_projectid, invoke_id)
+                inst.on_flow_timeout(packInfo, txt_projectid, invoke_id)
         else:
-            if callable(inst.onInvokeFlowError):
+            if callable(inst.on_flow_error):
                 packInfo = PackInfo(head)
                 txt_projectid = to_str(projectid, 'cp936').strip('\x00')
-                inst.onInvokeFlowError(packInfo, txt_projectid, invoke_id, ret)
+                inst.on_flow_error(packInfo, txt_projectid, invoke_id, ret)
 
     @classmethod
     def __invokeflow_ack_cb(cls, arg, local_clientid, head, projectid, invoke_id, ack, msg):
         inst = cls.__instance
         if inst is not None:
-            if hasattr(inst, 'onInvokeFlowAcknowledge'):
+            if hasattr(inst, 'on_flow_ack'):
                 packInfo = PackInfo(head)
                 txt_projectid = to_str(projectid, 'cp936').strip('\x00')
                 txt_msg = to_str(msg, 'cp936').strip('\x00')
-                inst.onInvokeFlowAcknowledge(
+                inst.on_flow_ack(
                     packInfo, txt_projectid, invoke_id, ack, txt_msg)
 
     @classmethod
@@ -247,9 +247,9 @@ class Client(object):
             #             if sys.version_info[0] < 3:
             #                 if cls.__instance:
             #                     inst = cls.__instance
-            #                     cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            #                     cls._on_global_connect(inst, ord(unit_id), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
             #             else:
-            #                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
+            #                 cls._on_global_connect(ord(unit_id), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
             cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(
                 accessunit), ord(status), to_str(ext_info, 'cp936'))
 
@@ -412,7 +412,7 @@ class Client(object):
         :param bool isNeedReturn: 是否需要流程返回值
         :param timeout: 等待流程返回超时值，单位为秒。
         :type timeout: int or float
-        :return: 当需要等待流程返回值时，该返回值是 :func:`onInvokeFlowRespond` "流程返回事件"中对应的ID.
+        :return: 当需要等待流程返回值时，该返回值是 :func:`on_flow_resp` "流程返回事件"中对应的ID.
         :rtype: int
         """
         c_server_unitid = c_int(server)
