@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''smartbus 网络通信客户端的Python接口类客户端类型
+"""smartbus 网络通信客户端的Python接口类客户端类型
 
 :author: 刘雪彦
 :date: 2013-6-8
-'''
+"""
 
 from __future__ import absolute_import
 
@@ -22,18 +22,18 @@ from .. import errors
 
 
 class Client(object):
-
-    '''SmartBus Network 客户端类
+    """SmartBus Network 客户端类
 
     这个类封装了 SmartBus Network 客户端的一系列方法与事件
-    '''
+    """
     __lib = None
     __unitid = None
     __instances = {}
     __onglobalconnect = None
 
-    def __init__(self, localClientId, localClientType, masterHost, masterPort, slaverHost=None, slaverPort=0xffff, authorUsr=None, authorPwd=None, extInfo=None, encoding=default_encoding):
-        '''构造函数
+    def __init__(self, localClientId, localClientType, masterHost, masterPort, slaverHost=None, slaverPort=0xffff,
+                 authorUsr=None, authorPwd=None, extInfo=None, encoding=default_encoding):
+        """构造函数
 
         :param localClientId:客户端的ID
         :param localClientType:客户端的类型标志
@@ -45,7 +45,7 @@ class Client(object):
         :param authorPwd:密码
         :param extInfo:附加信息
         :param encoding:收/发字符串时使用的编码。默认为 :data:`smartbus.utils.default_encoding`
-        '''
+        """
         if not Client.isInitialized():
             raise errors.NotInitializedError()
         cls = type(self)
@@ -77,8 +77,9 @@ class Client(object):
         self.__c_extInfo = c_char_p(to_bytes(self.__extInfo, self.encoding))
 
     @classmethod
-    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename, logging_option=(True, logging.DEBUG, logging.ERROR)):
-        '''初始化
+    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename,
+                   logging_option=(True, logging.DEBUG, logging.ERROR)):
+        """初始化
 
         调用其他方法前，必须首先初始化库
 
@@ -86,11 +87,11 @@ class Client(object):
         :param onglobalconnect:全局连接事件回调函数
         :param libraryfile:库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、../cdll/${system}/${machine}、 运行目录、当前目录、本文件目录。见 :data:`_c_smartbus_netcli_interface.lib_filename`
         :param logging_option:
-        '''
+        """
         if cls.__unitid is not None:
             raise errors.AlreadyInitializedError()
-#        if not isinstance(unitid, int):
-#            raise TypeError('The argument "unit" should be an integer')
+        #        if not isinstance(unitid, int):
+        #            raise TypeError('The argument "unit" should be an integer')
         cls.__logging_option = logging_option
         cls.__logger = logging.getLogger('{}.{}'.format(
             cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
@@ -155,8 +156,8 @@ class Client(object):
 
     @classmethod
     def finalize(cls):
-        '''释放库
-        '''
+        """释放库
+        """
         cls.__instances.clear()
         if cls.__unitid is not None:
             sbncif._c_fn_Release()
@@ -274,17 +275,17 @@ class Client(object):
 
     @property
     def localClientId(self):
-        '''客户端ID'''
+        """客户端ID"""
         return self.__localClientId
 
     @property
     def localClientType(self):
-        '''客户端类型'''
+        """客户端类型"""
         return self.__localClientType
 
     @property
     def unitid(self):
-        '''客户端的单元ID'''
+        """客户端的单元ID"""
         return self._unitid
 
     @property
@@ -293,79 +294,79 @@ class Client(object):
 
     @property
     def masterHost(self):
-        '''SmartBus 服务主机名
-        '''
+        """SmartBus 服务主机名
+        """
         return self.__masterHost
 
     @property
     def masterPort(self):
-        '''SmartBus 服务端口'''
+        """SmartBus 服务端口"""
         return self.__masterPort
 
     @property
     def slaverHost(self):
-        '''SmartBus 从服务主机名'''
+        """SmartBus 从服务主机名"""
         return self.__slaverHost
 
     @property
     def slaverPort(self):
-        '''SmartBus 从服务端口'''
+        """SmartBus 从服务端口"""
         return self.__slaverPort
 
     @property
     def authorUsr(self):
-        '''登录名
-        '''
+        """登录名
+        """
         return self.__authorUsr
 
     @property
     def authorPwd(self):
-        '''密码
-        '''
+        """密码
+        """
         return self.__authorPwd
 
     @property
     def extInfo(self):
-        '''连接附加信息'''
+        """连接附加信息"""
         return self.__extInfo
 
     @property
     def encoding(self):
-        '''收/发字符串时使用的编码。默认为 utils.default_encoding。
-        '''
+        """收/发字符串时使用的编码。默认为 utils.default_encoding。
+        """
         return self.__encoding
 
     def onConnectSuccess(self, unitId):
-        '''连接成功事件
+        """连接成功事件
 
         :param int unitId: 单元ID
-        '''
+        """
         pass
 
     def onConnectFail(self, unitId, errno):
-        '''连接失败事件
+        """连接失败事件
 
        :param int unitId: 单元ID
        :param int errno: 错误码
-       '''
+       """
         pass
 
     def onDisconnect(self):
-        '''连接中断事件
-        '''
+        """连接中断事件
+        """
         pass
 
     def onReceiveText(self, packInfo, txt):
-        '''收到文本事件
+        """收到文本事件
 
         :param packInfo: 数据包信息
         :type packInfo: smartbus.PackInfo
         :param str txt: 收到的文本
-        '''
+        """
         pass
 
     def onInvokeFlowAcknowledge(self, packInfo, project, invokeId, ack, msg):
-        '''收到流程执行回执事件
+        """收到流程执行回执事件
 
         在调用流程之后，通过该回调函数类型获知流程调用是否成功
 
@@ -375,11 +376,11 @@ class Client(object):
         :param int invokeId: 调用ID
         :param int ack: 流程调用是否成功。1表示成功，其它请参靠考误码
         :param str msg: 调用失败时的信息描述
-        '''
+        """
         pass
 
     def onInvokeFlowRespond(self, packInfo, project, invokeId, result):
-        '''收到流程返回数据事件
+        """收到流程返回数据事件
 
         通过类类型的回调函数，获取被调用流程的“子项目结束”节点的返回值列表
 
@@ -388,41 +389,41 @@ class Client(object):
         :param str project: 流程项目ID
         :param int invokeId: 调用ID
         :param int result: 返回的数据。JSON数组格式
-        '''
+        """
         pass
 
     def onInvokeFlowTimeout(self, packInfo, project, invokeId):
-        '''流程返回超时事件
+        """流程返回超时事件
 
         :param packInfo: 数据包信息
         :type packInfo: smartbus.PackInfo
         :param str project: 流程项目ID
         :param int invokeId: 调用ID
-        '''
+        """
         pass
 
     def onInvokeFlowError(self, packInfo, project, invokeId, errno):
-        '''流程调用错误事件
+        """流程调用错误事件
 
         :param packInfo: 数据包信息
         :type packInfo: smartbus.PackInfo
         :param str project: 流程项目ID
         :param int invokeId: 调用ID
         :param int errno: 错误码
-        '''
+        """
         pass
 
     def dispose(self):
-        '''释放客户端
-        '''
+        """释放客户端
+        """
         cls = type(self)
         cls.__instances.pop(self.__localClientId, None)
 
     def connect(self):
-        '''连接到服务器
+        """连接到服务器
 
         :exc: 如果连接失败，则抛出 :exc:`ConnectError` 异常
-        '''
+        """
         result = sbncif._c_fn_CreateConnect(
             self.__c_localClientId,
             self.__c_localClientType,
@@ -437,7 +438,7 @@ class Client(object):
         errors.check_restval(result)
 
     def send(self, cmd, cmdType, dstUnitId, dstClientId, dstClientType, data, encoding=None):
-        '''发送数据
+        """发送数据
 
         :param cmd: 命令
         :param cmdType: 命令类型
@@ -446,7 +447,7 @@ class Client(object):
         :param dstClientType: 目标客户端类型
         :param data: 待发送数据，可以是文本或者字节数组
         :param encoding: 文本的编码。默认为该对象的 :attr:`encoding` 属性
-        '''
+        """
         data = to_bytes(data, encoding if encoding else self.encoding)
         data_pc = create_string_buffer(data) if data else None
         data_sz = len(data_pc) if data_pc else 0
@@ -463,7 +464,7 @@ class Client(object):
         errors.check_restval(result)
 
     def invokeFlow(self, server, process, project, flow, parameters=[], isNeedReturn=True, timeout=30):
-        '''调用流程
+        """调用流程
 
         :param int server: IPSC流程服务所在节点
         :param int process: IPSC进程索引值，同时也是该IPSC进程的 smartbus client-id
@@ -476,7 +477,7 @@ class Client(object):
         :type timeout: int or float
         :return: 当需要等待流程返回值时，该返回值是 :func:`onInvokeFlowRespond` "流程返回事件"中对应的ID.
         :rtype: int
-        '''
+        """
         c_server_unitid = c_int(server)
         c_processindex = c_int(process)
         c_project_id = c_char_p(to_bytes(project, 'cp936'))
@@ -508,14 +509,14 @@ class Client(object):
         return result
 
     def ping(self, dstUnitId, dstClientId, dstClientType, data, encoding=None):
-        '''发送PING命令
+        """发送PING命令
 
         :param int dstUnitId: 目标的smartbus单元ID
         :param int dstClientId: 目标的smartbus客户端ID
         :param int dstClientType: 目标的smartbus客户端类型
         :param str data: 要发送的数据
         :param str encoding: 数据的编码。 默认值为None，表示使用 :attr:`smartbus.netlient.client.Client.encoding`
-        '''
+        """
         data = to_bytes(data, encoding if encoding else self.encoding)
         data_pc = create_string_buffer(data) if data else None
         data_sz = len(data_pc) if data_pc else 0
@@ -530,7 +531,7 @@ class Client(object):
         errors.check_restval(result)
 
     def sendNotify(self, server, process, project, title, mode, expires, param):
-        '''发送通知消息
+        """发送通知消息
 
         :param int server:  目标IPSC服务器smartbus单元ID
         :param int process: IPSC进程ID，同时也是该IPSC进程的 smartbus client-id
@@ -542,7 +543,7 @@ class Client(object):
         :param str param:   消息数据
         :return: > 0 invoke_id，调用ID。< 0 表示错误。
         :rtype: int
-        '''
+        """
         c_server_unitid = c_int(server)
         c_processindex = c_int(process)
         c_project_id = c_char_p(to_bytes(project, 'cp936'))

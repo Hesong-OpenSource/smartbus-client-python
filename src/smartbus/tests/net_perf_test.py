@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 2013-1-29
 
 @author: root
-'''
+"""
 
 print('importing...')
 
 from locale import atoi
 from uuid import uuid1
-
 
 try:
     readln = raw_input
@@ -20,14 +19,13 @@ except NameError:
 
 if __name__ == '__main__':
     print('start main...')
-    
+
     import sys
     import os
     import threading
     from time import time, sleep
     import smartbus.netclient
 
-    
     cc = 0
     bg_tm = time()
     cc_sent = 0
@@ -35,19 +33,23 @@ if __name__ == '__main__':
     cc_corr = 0
     cc_tmot = 0
     map_data = {}
-    
+
     print('def....')
-        
+
+
     def on_connect_ok(unitId):
         print('connected!', unitId)
-        
+
+
     def on_connect_err(unitId, errno):
         print('connect error:', unitId, errno)
         raise Exception()
-    
+
+
     def on_disconnect():
         print('disconnect')
-        
+
+
     def on_receive(packInfo, txt):
         global bg_tm
         global cc
@@ -55,7 +57,7 @@ if __name__ == '__main__':
         global cc_corr
         global map_data
         global bg_tm
-#        print(time() - bg_tm, txt)
+        #        print(time() - bg_tm, txt)
         cc_recv += 1
         try:
             map_data.pop(txt)
@@ -68,7 +70,8 @@ if __name__ == '__main__':
             print('sent: %d, received: %d, correct:%d, timeout:%d' % (cc_sent, cc_recv, cc_corr, cc_tmot))
             print('---------------------------------------------------------------')
             print()
-    
+
+
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         global cc
         global cc_recv
@@ -84,7 +87,8 @@ if __name__ == '__main__':
             print('sent: %d, received: %d, correct:%d, timeout:%d' % (cc_sent, cc_recv, cc_corr, cc_tmot))
             print('---------------------------------------------------------------')
             print()
-            
+
+
     if sys.version_info[0] < 3:
         def on_global_connect(client, unitid, clientid, clienttype, status, ext_info):
             print(unitid, clientid, clienttype, status, ext_info)
@@ -98,19 +102,19 @@ if __name__ == '__main__':
     print('create....')
     client = smartbus.netclient.Client(1, 20, '192.168.1.203', 8089, extInfo='这个是netclient节点')
     print('connect...')
-    assert(client)
+    assert (client)
     print(client)
     client.onConnectSuccess = on_connect_ok
     client.onConnectFail = on_connect_err
     client.onDisconnect = on_disconnect
     client.onReceiveText = on_receive
-#    client.onInvokeFlowRespond = onInvokeFlowRespond
-#    client.onInvokeFlowTimeout = onInvokeFlowTimeout
+    #    client.onInvokeFlowRespond = onInvokeFlowRespond
+    #    client.onInvokeFlowTimeout = onInvokeFlowTimeout
     print('connecting')
     client.connect()
-    
+
     while True:
-        s = readln('>')            
+        s = readln('>')
         if s.strip().lower() in ('quit', 'exit'):
             break
         else:
@@ -119,7 +123,7 @@ if __name__ == '__main__':
                 n = atoi(s)
             except:
                 pass
-            
+
             if n:
                 cc_sent = 0
                 cc_recv = 0
@@ -129,17 +133,16 @@ if __name__ == '__main__':
                 cc = n
                 bg_tm = time()
                 for i in range(n):
-#                    txt = '%09d-%s' % (cc_sent, uuid1().hex)
+                    #                    txt = '%09d-%s' % (cc_sent, uuid1().hex)
                     client.sendText(9, 9, 14, 14, 14, str(i))
                     cc_sent += 1
                     map_data[i] = i
                     while cc_sent - cc_recv > 1000:
                         sleep(0.001)
-                    
-                    
+
+
             elif s.strip().lower() == 'show':
                 print('sent: %d, received: %d, correct:%d, timeout:%d' % (cc_sent, cc_recv, cc_corr, cc_tmot))
-                
 
     print('dispose...')
     client.dispose()
@@ -147,4 +150,3 @@ if __name__ == '__main__':
     print('finalize...')
     smartbus.netclient.Client.finalize()
     print('finalized')
-    

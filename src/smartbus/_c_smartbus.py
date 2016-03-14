@@ -75,7 +75,6 @@ SMARTBUS_NODECLI_TYPE_IPSC = 2
 SMARTBUS_NODECLI_TYPE_MONITOR = 3
 SMARTBUS_NODECLI_TYPE_AGENT = 4
 
-
 SMARTBUS_ERR_OK = 0
 
 SMARTBUS_ERR_ARGUMENT = -1
@@ -154,9 +153,7 @@ SMARTBUS_ERR_TIMEOUT = -25
 SMARTBUS_ERR_OTHER = -99
 """其它错误"""
 
-
 MAX_SMARTBUS_IPADDR_SIZE = 64
-
 
 CONNECTED_STATUS_INIT = 0
 CONNECTED_STATUS_CONNECTING = 1
@@ -192,8 +189,10 @@ _c_fntyp_connection_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, c_int, c_int)
 _c_fntyp_disconnect_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte)
 _c_fntyp_recvdata_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_HEAD), c_void_p, c_int)
 _c_fntyp_global_connect_cb = CALLBACKFUNCTYPE(None, c_void_p, c_char, c_char, c_char, c_char, c_char, c_char_p)
-_c_fntyp_invokeflow_ack_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
-_c_fntyp_invokeflow_ret_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_HEAD), c_char_p, c_int, c_int, c_char_p)
+_c_fntyp_invokeflow_ack_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_HEAD), c_char_p, c_int, c_int,
+                                              c_char_p)
+_c_fntyp_invokeflow_ret_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, POINTER(_PACKET_HEAD), c_char_p, c_int, c_int,
+                                              c_char_p)
 _c_fntyp_unitdata_cb = CALLBACKFUNCTYPE(None, c_byte, c_byte, c_void_p, c_int)
 _c_fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, c_char_p)
 

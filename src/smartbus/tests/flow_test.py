@@ -1,10 +1,10 @@
 # encoding: utf-8
 
-'''
+"""
 Created on 2013-3-5
 
 author: tanbro
-'''
+"""
 
 from __future__ import print_function, absolute_import, with_statement
 
@@ -15,7 +15,6 @@ if sys.version_info[0] == 2:
 elif sys.version_info[0] == 3:
     readln = input
 
-
 import smartbus.netclient
 from smartbus.utils import to_bytes, to_unicode, to_str
 
@@ -23,25 +22,29 @@ if __name__ == '__main__':
 
     def onConnectSuccess(unitId):
         print('connected! {}'.format(unitId))
-    
+
+
     def onReceiveText(packInfo, txt):
-        '''
+        """
         收到了文本消息。
         :param packInfo:
         :param txt:
-        '''
+        """
         print(txt)
 
 
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         print('FlowRespond:', packInfo, project, invokeId, result)
-        
-    def onInvokeFlowAcknowledge(packInfo, project, invokeId, ack, msg):
-        print('FlowAcknowledge:\n packInfo={}\n project={}\n invokeId={}\n ack={}\n msg={}'.format(packInfo, project, invokeId, ack, msg))
 
-    print ('init...')
+
+    def onInvokeFlowAcknowledge(packInfo, project, invokeId, ack, msg):
+        print('FlowAcknowledge:\n packInfo={}\n project={}\n invokeId={}\n ack={}\n msg={}'.format(packInfo, project,
+                                                                                                   invokeId, ack, msg))
+
+
+    print('init...')
     smartbus.netclient.Client.initialize(17)
-    print ('init OK! Connecting...')
+    print('init OK! Connecting...')
 
     cli = smartbus.netclient.Client(0, 13, '10.4.62.45', 8089, encoding='utf-8')
 
@@ -49,9 +52,8 @@ if __name__ == '__main__':
     cli.onReceiveText = onReceiveText
     cli.onInvokeFlowRespond = onInvokeFlowRespond
     cli.onInvokeFlowAcknowledge = onInvokeFlowAcknowledge
-    
+
     cli.connect()
-    
 
     while True:
         s = readln()

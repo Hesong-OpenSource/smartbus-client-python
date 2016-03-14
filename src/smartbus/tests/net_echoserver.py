@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 # encoding: utf-8
-'''
+"""
 ipc_echoserver -- shortdesc
 
 ipc_echoserver is a description
@@ -15,7 +15,7 @@ It defines classes_and_methods
 
 @contact:    user_email
 @deffield    updated: Updated
-'''
+"""
 
 import sys
 import os
@@ -40,38 +40,40 @@ try:
 except NameError:
     readln = input
 
+
 def start_server(*args, **kwargs):
-    '''
+    """
     启动服务器
-    '''
+    """
     program_args = kwargs['program_args']
-    
+
     import smartbus.netclient
-    
+
     def on_connect_ok(unitId):
         print('>>> on_connect_ok')
         print('connected!', unitId)
         print('sleep')
         time.sleep(5)
         print('<<< on_connect_ok')
-        
+
     def on_connect_err(unitId, errno):
         print('connect error:', unitId, errno)
-        
+
     def on_receive(packInfo, txt):
         cli.send(9, 9, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
-    
+
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         print('flow respond:', packInfo, project, invokeId, result)
-    
+
     def onInvokeFlowTimeout(packInfo, project, invokeId):
         print('flow timeout:', packInfo, project, invokeId)
-    
-    #lib_file = '''E:\My Projects\TK ClientsServiceSystem\smartbus\lib\windows-msc1600-x86\smartbus_net_cli.dll'''
-    #smartbus.netclient.Client.initialize(program_args.unitid, libraryfile=lib_file)
+
+    # lib_file = """E:\My Projects\TK ClientsServiceSystem\smartbus\lib\windows-msc1600-x86\smartbus_net_cli.dll"""
+    # smartbus.netclient.Client.initialize(program_args.unitid, libraryfile=lib_file)
     smartbus.netclient.Client.initialize(program_args.unitid)
-    cli = smartbus.netclient.Client(program_args.clientid, program_args.clienttype, program_args.host, program_args.port)
-    assert(cli)
+    cli = smartbus.netclient.Client(program_args.clientid, program_args.clienttype, program_args.host,
+                                    program_args.port)
+    assert (cli)
 
     cli.onConnectSuccess = on_connect_ok
     cli.onConnectFail = on_connect_err
@@ -80,28 +82,32 @@ def start_server(*args, **kwargs):
     cli.onInvokeFlowTimeout = onInvokeFlowTimeout
 
     print('connecting...')
-    cli.connect()  
+    cli.connect()
     print('running...')
     while True:
         print('readln...')
         s = readln()
         print('readln:', s)
     print('end of while')
-    
+
 
 class CLIError(Exception):
-    '''Generic exception to raise and log different fatal errors.'''
+    """Generic exception to raise and log different fatal errors."""
+
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
         self.msg = "E: %s" % msg
+
     def __str__(self):
         return self.msg
+
     def __unicode__(self):
         return self.msg
 
+
 def main(argv=None):  # IGNORE:C0111
-    '''Command line options.'''
-    
+    """Command line options."""
+
     if argv is None:
         argv = sys.argv
     else:
@@ -130,27 +136,27 @@ USAGE
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
         parser.add_argument("-s", "--host", dest="host", type=str, default='127.0.0.1',
-            help="smartbus Server Host. [default: %(default)s]")
+                            help="smartbus Server Host. [default: %(default)s]")
         parser.add_argument("-p", "--port", dest="port", type=int, default=8089,
-            help="smartbus Server Port. [default: %(default)s]")
+                            help="smartbus Server Port. [default: %(default)s]")
         parser.add_argument("-u", "--unitid-id", dest="unitid", type=int, default=15,
-            help="smartbus IPC Unit ID")
+                            help="smartbus IPC Unit ID")
         parser.add_argument("-c", "--client-id", dest="clientid", type=int, default=0,
-            help="smartbus IPC client ID. [default: %(default)s]")
+                            help="smartbus IPC client ID. [default: %(default)s]")
         parser.add_argument("-t", "--client-type", dest="clienttype", type=int, default=-1,
-            help="smartbus IPC client ID type. [default: %(default)s]")
+                            help="smartbus IPC client ID type. [default: %(default)s]")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
-        
+
         # Process arguments
         args = parser.parse_args()
-        
+
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
         return 0
     except Exception as e:
         if DEBUG or TESTRUN:
-            raise(e)
+            raise (e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
@@ -158,15 +164,18 @@ USAGE
 
     start_server(program_args=args)
 
+
 if __name__ == "__main__":
     if DEBUG:
         pass
     if TESTRUN:
         import doctest
+
         doctest.testmod()
     if PROFILE:
         import cProfile
         import pstats
+
         profile_filename = 'echo_server_profile.txt'
         cProfile.run('main()', profile_filename)
         statsfile = open("profile_stats.txt", "wb")

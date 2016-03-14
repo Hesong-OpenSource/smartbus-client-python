@@ -1,6 +1,6 @@
 #!/usr/local/bin/python3
 # encoding: utf-8
-'''
+"""
 ipc_echoserver -- shortdesc
 
 ipc_echoserver is a description
@@ -15,7 +15,7 @@ It defines classes_and_methods
 
 @contact:    user_email
 @deffield    updated: Updated
-'''
+"""
 
 import sys
 import os
@@ -39,63 +39,68 @@ try:
 except NameError:
     readln = input
 
+
 def start_server(*args, **kwargs):
-    '''
+    """
     启动服务器
-    '''
+    """
     program_args = kwargs['program_args']
-    
+
     import smartbus.ipcclient
-    
+
     def on_connect_ok(unitId):
         print('connected!', unitId)
-        
+
     def on_connect_err(unitId, errno):
         print('connect error:', unitId, errno)
-        
+
     def on_receive(packInfo, txt):
         cli.sendText(9, 9, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
-    
+
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         print('flow respond:', packInfo, project, invokeId, result)
-    
+
     def onInvokeFlowTimeout(packInfo, project, invokeId):
         print('flow timeout:', packInfo, project, invokeId)
-       
+
     if sys.version_info[0] < 3:
         def onglobalconnect(client, unitid, clientid, clienttype, status, ext_info):
             print('onglobalconnect:', unitid, clientid, clienttype, status, ext_info)
     else:
         def onglobalconnect(unitid, clientid, clienttype, status, ext_info):
             print('onglobalconnect:', unitid, clientid, clienttype, status, ext_info)
-    
+
     smartbus.ipcclient.Client.initialize(program_args.clientid, program_args.clienttype, onglobalconnect)
     cli = smartbus.ipcclient.Client.instance(extInfo='我是 ipc_echoserver')
-    assert(cli)
+    assert (cli)
     cli.connect()
     cli.onConnectSuccess = on_connect_ok
     cli.onConnectFail = on_connect_err
     cli.onReceiveText = on_receive
     cli.onInvokeFlowRespond = onInvokeFlowRespond
     cli.onInvokeFlowTimeout = onInvokeFlowTimeout
-    
+
     while True:
         readln()
-    
+
 
 class CLIError(Exception):
-    '''Generic exception to raise and log different fatal errors.'''
+    """Generic exception to raise and log different fatal errors."""
+
     def __init__(self, msg):
         super(CLIError).__init__(type(self))
         self.msg = "E: %s" % msg
+
     def __str__(self):
         return self.msg
+
     def __unicode__(self):
         return self.msg
 
+
 def main(argv=None):  # IGNORE:C0111
-    '''Command line options.'''
-    
+    """Command line options."""
+
     if argv is None:
         argv = sys.argv
     else:
@@ -124,9 +129,10 @@ USAGE
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
         parser.add_argument("-i", "--client-id", dest="clientid", type=int, help="smartbus IPC client ID")
-        parser.add_argument("-t", "--client-type", dest="clienttype", type=int, default=-1, help="smartbus IPC client ID type")
+        parser.add_argument("-t", "--client-type", dest="clienttype", type=int, default=-1,
+                            help="smartbus IPC client ID type")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
-        
+
         # Process arguments
         args = parser.parse_args()
         start_server(program_args=args)
@@ -137,21 +143,24 @@ USAGE
         return 0
     except Exception as e:
         if DEBUG or TESTRUN:
-            raise(e)
+            raise (e)
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help")
         return 2
+
 
 if __name__ == "__main__":
     if DEBUG:
         pass
     if TESTRUN:
         import doctest
+
         doctest.testmod()
     if PROFILE:
         import cProfile
         import pstats
+
         profile_filename = 'echo_server_profile.txt'
         cProfile.run('main()', profile_filename)
         statsfile = open("profile_stats.txt", "wb")

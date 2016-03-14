@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 2013年11月22日
 
 @author: tanbro
-'''
+"""
 import unittest
 import sys
 import threading
@@ -25,8 +25,8 @@ CMDTYPE_JSONRPC_REQ = 211
 CMDTYPE_JSONRPC_RES = 212
 '''JSONRPC 回复. 用于 smartbus 客户端 send 函数的 cmd_type 参数.'''
 
-class FlowJsonRpcTest(unittest.TestCase):
 
+class FlowJsonRpcTest(unittest.TestCase):
     is_inited = False
     is_connected = False
     pending_invokes = {}
@@ -35,18 +35,18 @@ class FlowJsonRpcTest(unittest.TestCase):
 
     def setUp(self):
         cls = type(self)
-        
+
         if not cls.is_inited:
             Client.initialize(17, 17)
             cls.is_inited = True
-            
+
         self._client = Client.instance()
         print('library file :', self._client.library)
-            
+
         if not cls.is_connected:
             cond_connect = threading.Condition()
             cond_connect.acquire()
-        
+
             def ConnectSuccess(unitId):
                 print('ConnectSuccess: unitid={}'.format(unitId))
                 cls.is_connected = True
@@ -54,24 +54,27 @@ class FlowJsonRpcTest(unittest.TestCase):
                 cond_connect.acquire()
                 cond_connect.notify()
                 cond_connect.release()
+
             pass
-            
+
             def onConnectFail(unitId, errno):
                 print('ConnectFail: unitId={}, errno={}'.format(unitId, errno), file=sys.stderr)
                 cls.is_connected = False
                 cond_connect.acquire()
                 cond_connect.notify()
                 cond_connect.release()
-            pass                
-            
+
+            pass
+
             def onDisconnect():
                 print('Disconnect', file=sys.stderr)
                 cls.is_connected = False
                 cond_connect.acquire()
                 cond_connect.notify()
                 cond_connect.release()
+
             pass
-            
+
             def onInvokeFlowRespond(packInfo, project, invokeId, result):
                 print('>>> InvokeFlowRespond: invokeId={2}, result={3}'.format(packInfo, project, invokeId, result))
                 with cls.pending_lock:
@@ -82,8 +85,9 @@ class FlowJsonRpcTest(unittest.TestCase):
                 cond.notify()
                 cond.release()
                 print('<<< InvokeFlowRespond: invokeId={}'.format(invokeId))
+
             pass
-            
+
             def onInvokeFlowTimeout(packInfo, project, invokeId):
                 print('InvokeFlowTimeout: invokeId={2}'.format(packInfo, project, invokeId), file=sys.stderr)
                 with cls.pending_lock:
@@ -93,12 +97,13 @@ class FlowJsonRpcTest(unittest.TestCase):
                 cond.acquire()
                 cond.notify()
                 cond.release()
+
             pass
-        
+
             def onReceiveText(packInfo, txt):
                 print('ReceiveText: txt={1}'.format(packInfo, txt))
                 reqobj = json.loads(txt)
-                id_ = reqobj['id'] 
+                id_ = reqobj['id']
                 method = reqobj['method']
                 params = reqobj['params']
                 if method == 'Echo':
@@ -107,101 +112,101 @@ class FlowJsonRpcTest(unittest.TestCase):
                     elif isinstance(params, dict):
                         msg = params['msg']
                     msg = 'ReEcho: ' + msg
-                    txt = json.dumps({'jsonrpc':jsonrpc_version, 'id':id_, 'result':msg})
-                self._client.send(0, CMDTYPE_JSONRPC_RES, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.srcUnitClientType, txt)
+                    txt = json.dumps({'jsonrpc': jsonrpc_version, 'id': id_, 'result': msg})
+                self._client.send(0, CMDTYPE_JSONRPC_RES, packInfo.srcUnitId, packInfo.srcUnitClientId,
+                                  packInfo.srcUnitClientType, txt)
+
             pass
-            
+
             self._client.onConnectSuccess = ConnectSuccess
             self._client.onConnectFail = onConnectFail
             self._client.onDisconnect = onDisconnect
             self._client.onInvokeFlowRespond = onInvokeFlowRespond
             self._client.onInvokeFlowTimeout = onInvokeFlowTimeout
             self._client.onReceiveText = onReceiveText
-            
+
             self._client.connect()
             cond_connect.wait()
             self.assertTrue(cls.is_connected, 'connect failed.')
 
-
     def tearDown(self):
         pass
 
+    #     def test_flow_echo(self):
+    #         cls = type(self)
+    #         msg = 'Hello! 你好！'
+    #         cond = threading.Condition()
+    #         cond.acquire()
+    #         invoke_id = self._client.invokeFlow(
+    #             server=cls.unitid,
+    #             process=0,
+    #             project='Project1',
+    #             flow='_agent_rpc',
+    #             parameters={
+    #                 'method' : 'test.Echo',
+    #                 'params' : {
+    #                     'msg' : msg
+    #                 }
+    #             },
+    #             isNeedReturn=True,
+    #         )
+    #         with cls.pending_lock:
+    #             pending = cls.pending_invokes[invoke_id] = [cond, None]
+    #         cond.wait()
+    #         with cls.pending_lock:
+    #             cls.pending_invokes.pop(invoke_id)
+    #         result = pending[1]
+    #         if isinstance(result, Exception):
+    #             raise result
+    #         self.assertIsInstance(result, list)
+    #         self.assertEqual(result[0], True)
+    #         self.assertEqual(result[1], msg)
+    #
+    #     def test_flow_reecho(self):
+    #         cls = type(self)
+    #         msg = 'Hello! 你好！'
+    #         cond = threading.Condition()
+    #         cond.acquire()
+    #         invoke_id = self._client.invokeFlow(
+    #             server=cls.unitid,
+    #             process=0,
+    #             project='Project1',
+    #             flow='_agent_rpc',
+    #             parameters={
+    #                 'method' : 'test.ReEcho',
+    #                 'params' : {
+    #                     'msg' : msg
+    #                 }
+    #             },
+    #             isNeedReturn=True,
+    #         )
+    #         with cls.pending_lock:
+    #             pending = cls.pending_invokes[invoke_id] = [cond, None]
+    #         cond.wait()
+    #         with cls.pending_lock:
+    #             cls.pending_invokes.pop(invoke_id)
+    #         result = pending[1]
+    #         if isinstance(result, Exception):
+    #             raise result
+    #         self.assertIsInstance(result, list)
+    #         self.assertEqual(result[0], True)
+    #         self.assertEqual(result[1], 'ReEcho: ' + msg)
 
-#     def test_flow_echo(self):
-#         cls = type(self)
-#         msg = 'Hello! 你好！'
-#         cond = threading.Condition()
-#         cond.acquire()
-#         invoke_id = self._client.invokeFlow(
-#             server=cls.unitid,
-#             process=0,
-#             project='Project1',
-#             flow='_agent_rpc',
-#             parameters={
-#                 'method' : 'test.Echo',
-#                 'params' : {
-#                     'msg' : msg
-#                 }
-#             },
-#             isNeedReturn=True,
-#         )
-#         with cls.pending_lock:
-#             pending = cls.pending_invokes[invoke_id] = [cond, None]
-#         cond.wait()
-#         with cls.pending_lock:
-#             cls.pending_invokes.pop(invoke_id)
-#         result = pending[1]
-#         if isinstance(result, Exception):
-#             raise result
-#         self.assertIsInstance(result, list)
-#         self.assertEqual(result[0], True)
-#         self.assertEqual(result[1], msg)
-#         
-#     def test_flow_reecho(self):
-#         cls = type(self)
-#         msg = 'Hello! 你好！'
-#         cond = threading.Condition()
-#         cond.acquire()
-#         invoke_id = self._client.invokeFlow(
-#             server=cls.unitid,
-#             process=0,
-#             project='Project1',
-#             flow='_agent_rpc',
-#             parameters={
-#                 'method' : 'test.ReEcho',
-#                 'params' : {
-#                     'msg' : msg
-#                 }
-#             },
-#             isNeedReturn=True,
-#         )
-#         with cls.pending_lock:
-#             pending = cls.pending_invokes[invoke_id] = [cond, None]
-#         cond.wait()
-#         with cls.pending_lock:
-#             cls.pending_invokes.pop(invoke_id)
-#         result = pending[1]
-#         if isinstance(result, Exception):
-#             raise result
-#         self.assertIsInstance(result, list)
-#         self.assertEqual(result[0], True)
-#         self.assertEqual(result[1], 'ReEcho: ' + msg)
-        
-        
+
     def test_flow_echo_multithread(self):
-        '''
+        """
         该测试需要：
         在本 IPC Smartbus 的 IPSC 中，需要
-        '''
+        """
         cls = type(self)
         threads = []
-        
+
         def _do(n):
             print('test.Echo [{}] start'.format(n))
             msg = 'Hello! 你好！ {}'.format(n)
             cond = threading.Condition()
             cond.acquire()
-            
+
             print('>>> test.Echo [{}] invokeFlow'.format(n))
             invoke_id = self._client.invokeFlow(
                 server=cls.unitid,
@@ -209,18 +214,18 @@ class FlowJsonRpcTest(unittest.TestCase):
                 project='Project1',
                 flow='_agent_rpc',
                 parameters={
-                    'method' : 'test.Echo',
-                    'params' : {
-                        'msg' : msg
+                    'method': 'test.Echo',
+                    'params': {
+                        'msg': msg
                     }
                 },
                 isNeedReturn=True,
             )
             print('<<< test.Echo [{}] invokeFlow returns {}'.format(n, invoke_id))
-                
+
             with cls.pending_lock:
                 pending = cls.pending_invokes[invoke_id] = [cond, None]
-                
+
             print('test.Echo [{}] -> {} waiting...'.format(n, invoke_id))
             cond.wait()
             with cls.pending_lock:
@@ -232,22 +237,23 @@ class FlowJsonRpcTest(unittest.TestCase):
             self.assertEqual(result[0], True)
             self.assertEqual(result[1], msg)
             print('test.Echo [{}] -> {} OK.'.format(n, invoke_id))
+
         pass
-        
+
         for i in range(100):
             trd = threading.Thread(target=_do, args=(i,))
             trd.daemon = True
             threads.append(trd)
             trd.start()
-            
+
         for i in range(len(threads)):
             trd = threads[i]
             print('join Echo test thread {} ...'.format(i))
             trd.join()
             print('Echo test thread {} joined'.format(i))
-        
-        
-#     def test_flow_multi_reecho(self):
+
+
+# def test_flow_multi_reecho(self):
 #         cls = type(self)
 #         threads = []
 #         
