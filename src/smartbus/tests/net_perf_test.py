@@ -98,9 +98,9 @@ if __name__ == '__main__':
 
     lib_file = '''E:\My Projects\TK ClientsServiceSystem\smartbus\lib\windows-msc1600-x86\smartbus_net_cli.dll'''
     print('init....')
-    smartbus.netclient.Client.initialize(23, on_global_connect, libraryfile=lib_file)
+    smartbus.netclient.Client.initialize(23, on_global_connect, library_file=lib_file)
     print('create....')
-    client = smartbus.netclient.Client(1, 20, '192.168.1.203', 8089, extInfo='这个是netclient节点')
+    client = smartbus.netclient.Client(1, 20, '192.168.1.203', 8089, ext_info='这个是netclient节点')
     print('connect...')
     assert (client)
     print(client)

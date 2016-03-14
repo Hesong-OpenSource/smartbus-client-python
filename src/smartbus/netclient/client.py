@@ -31,36 +31,36 @@ class Client(object):
     __instances = {}
     __onglobalconnect = None
 
-    def __init__(self, localClientId, localClientType, masterHost, masterPort, slaverHost=None, slaverPort=0xffff,
-                 authorUsr=None, authorPwd=None, extInfo=None, encoding=default_encoding):
+    def __init__(self, local_client_id, local_client_type, master_host, master_port, slaver_host=None,
+                 slaver_port=0xffff, author_usr=None, author_pwd=None, ext_info=None, encoding=default_encoding):
         """构造函数
 
-        :param localClientId:客户端的ID
-        :param localClientType:客户端的类型标志
-        :param masterHost:客户端所要连接的主服务器
-        :param masterPort:客户端所要连接的主服务器端口
-        :param slaverHost:客户端所要连接的从服务器
-        :param slaverPort:客户端所要连接的从服务器端口
-        :param authorUsr:登录名
-        :param authorPwd:密码
-        :param extInfo:附加信息
+        :param local_client_id:客户端的ID
+        :param local_client_type:客户端的类型标志
+        :param master_host:客户端所要连接的主服务器
+        :param master_port:客户端所要连接的主服务器端口
+        :param slaver_host:客户端所要连接的从服务器
+        :param slaver_port:客户端所要连接的从服务器端口
+        :param author_usr:登录名
+        :param author_pwd:密码
+        :param ext_info:附加信息
         :param encoding:收/发字符串时使用的编码。默认为 :data:`smartbus.utils.default_encoding`
         """
         if not Client.isInitialized():
             raise errors.NotInitializedError()
         cls = type(self)
-        if localClientId in cls.__instances:
+        if local_client_id in cls.__instances:
             raise errors.AlreadyExistsError()
-        cls.__instances[localClientId] = self
-        self.__localClientId = localClientId
-        self.__localClientType = localClientType
-        self.__masterHost = masterHost
-        self.__masterPort = masterPort
-        self.__slaverHost = slaverHost
-        self.__slaverPort = slaverPort
-        self.__authorUsr = authorUsr
-        self.__authorPwd = authorPwd
-        self.__extInfo = extInfo
+        cls.__instances[local_client_id] = self
+        self.__localClientId = local_client_id
+        self.__localClientType = local_client_type
+        self.__masterHost = master_host
+        self.__masterPort = master_port
+        self.__slaverHost = slaver_host
+        self.__slaverPort = slaver_port
+        self.__authorUsr = author_usr
+        self.__authorPwd = author_pwd
+        self.__extInfo = ext_info
         self.__encoding = encoding
         self.__c_localClientId = c_byte(self.__localClientId)
         self.__c_localClientType = c_long(self.__localClientType)
@@ -77,55 +77,32 @@ class Client(object):
         self.__c_extInfo = c_char_p(to_bytes(self.__extInfo, self.encoding))
 
     @classmethod
-    def initialize(cls, unitid, onglobalconnect=None, libraryfile=sbncif.lib_filename,
+    def initialize(cls, unit_id, on_global_connect=None, library_file=sbncif.lib_filename,
                    logging_option=(True, logging.DEBUG, logging.ERROR)):
         """初始化
 
         调用其他方法前，必须首先初始化库
 
-        :param unitid:单元ID。在所连接到的SmartBus服务器上，每个客户端进程的单元ID都必须是全局唯一的。
-        :param onglobalconnect:全局连接事件回调函数
-        :param libraryfile:库文件。如果不指定该参数，则加载时，会自动搜索库文件，其搜索的目录次序为：系统目录、../cdll/${system}/${machine}、 运行目录、当前目录、本文件目录。见 :data:`_c_smartbus_netcli_interface.lib_filename`
+        :param unit_id:单元ID。在所连接到的SmartBus服务器上，每个客户端进程的单元ID都必须是全局唯一的。
+        :param on_global_connect:全局连接事件回调函数
+        :param library_file:库文件。如果不指定该参数，则加载时，会搜索库文件。请保证so/dll在搜索路径中！
         :param logging_option:
         """
         if cls.__unitid is not None:
             raise errors.AlreadyInitializedError()
-        #        if not isinstance(unitid, int):
+        # if not isinstance(unit_id, int):
         #            raise TypeError('The argument "unit" should be an integer')
         cls.__logging_option = logging_option
         cls.__logger = logging.getLogger('{}.{}'.format(
             cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
         cls.__logger.info('initialize')
-        if not libraryfile:
-            libraryfile = sbncif.lib_filename
-        try:
-            fpath = libraryfile
-            cls.__logger.warn(u'load %s', fpath)
-            cls.__lib = sbncif.load_lib(fpath)
-        except:
-            try:
-                fpath = os.path.join(os.path.dirname(os.path.abspath(
-                    __file__)), '..', 'cdll', platform.system(), platform.machine(), libraryfile)
-                cls.__logger.warn(u'load %s', fpath)
-                cls.__lib = sbncif.load_lib(fpath)
-            except:
-                try:
-                    fpath = os.path.join(os.getcwd(), libraryfile)
-                    cls.__logger.warn(u'load %s', fpath)
-                    cls.__lib = sbncif.load_lib(fpath)
-                except:
-                    try:
-                        fpath = os.path.join(os.path.curdir, libraryfile)
-                        cls.__logger.warn(u'load %s', fpath)
-                        cls.__lib = sbncif.load_lib(fpath)
-                    except:
-                        fpath = os.path.join(
-                            os.path.dirname(os.path.abspath(__file__)), libraryfile)
-                        cls.__logger.warn(u'load %s', fpath)
-                        cls.__lib = sbncif.load_lib(fpath)
-        errors.check_restval(sbncif._c_fn_Init(unitid))
-        cls.__unitid = unitid
-        cls.__onglobalconnect = onglobalconnect
+        if not library_file:
+            library_file = sbncif.lib_filename
+        cls.__logger.warn(u'load %s', library_file)
+        cls.__lib = sbncif.load_lib(library_file)
+        errors.check_restval(sbncif._c_fn_Init(unit_id))
+        cls.__unitid = unit_id
+        cls.__onglobalconnect = on_global_connect
         cls.__c_fn_connection_cb = sbncif._c_fntyp_connection_cb(
             cls.__connection_cb)
         cls.__c_fn_recvdata_cb = sbncif._c_fntyp_recvdata_cb(cls.__recvdata_cb)
@@ -252,16 +229,6 @@ class Client(object):
     @classmethod
     def __global_connect_cb(cls, arg, unitid, clientid, clienttype, accessunit, status, ext_info):
         if callable(cls.__onglobalconnect):
-            #             if sys.version_info[0] < 3:
-            #                 inst = None
-            #                 if len(cls.__instances) > 0:
-            #                     for v in cls.__instances.values():
-            #                         inst = v
-            #                         break
-            #                     if inst:
-            #                         cls.__onglobalconnect(inst, ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
-            #             else:
-            #                 cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(accessunit), ord(status), to_str(ext_info, 'cp936'))
             cls.__onglobalconnect(ord(unitid), ord(clientid), ord(clienttype), ord(
                 accessunit), ord(status), to_str(ext_info, 'cp936'))
 

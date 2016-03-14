@@ -18,9 +18,12 @@ from ctypes import CDLL, RTLD_GLOBAL, c_byte, c_int, c_void_p, CFUNCTYPE, c_char
 from .._c_smartbus import _c_fntyp_connection_cb, _c_fntyp_disconnect_cb, _c_fntyp_recvdata_cb, \
     _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, _c_fntyp_trace_str_cb
 
-# smartbus IPC 客户端默认的共享/动态库文件名
-# 在POSIX系统下，默认是 libbusnetcli.so。
-# 在WINNT系统下，默认是 smartbus_net_cli.dll。
+#: smartbus IPC 客户端默认的共享/动态库文件名
+#:
+#: 在POSIX系统下，默认是 `libbusnetcli.so`。
+#: 在WINNT系统下，默认是 `smartbus_net_cli.dll`。
+lib_filename = ''
+
 if os.name in ('posix'):
     lib_filename = 'libbusnetcli.so'
 elif os.name in ("nt", "ce"):
@@ -59,28 +62,29 @@ _paramflags_Release = ()
 _c_fntyp_SetCallBackFn = CFUNCTYPE(None, _c_fntyp_connection_cb, _c_fntyp_recvdata_cb, _c_fntyp_disconnect_cb,
                                    _c_fntyp_invokeflow_ret_cb, _c_fntyp_global_connect_cb, c_void_p)
 _paramflags_SetCallBackFn = (1, 'client_conn_cb', _c_fntyp_connection_cb), (1, 'recv_cb', _c_fntyp_recvdata_cb), (
-1, 'disconnect_cb', _c_fntyp_disconnect_cb), (1, 'invokeflow_ret_cb', _c_fntyp_invokeflow_ret_cb), (
-                            1, 'global_connect_cb', _c_fntyp_global_connect_cb), (1, 'arg', c_void_p)
+    1, 'disconnect_cb', _c_fntyp_disconnect_cb), (1, 'invokeflow_ret_cb', _c_fntyp_invokeflow_ret_cb), (
+                                1, 'global_connect_cb', _c_fntyp_global_connect_cb), (1, 'arg', c_void_p)
 
 _c_fntyp_CreateConnect = CFUNCTYPE(c_int, c_byte, c_long, c_char_p, c_ushort, c_char_p, c_ushort, c_char_p, c_char_p,
                                    c_char_p)
 _paramflags_CreateConnect = (1, 'local_clientid', c_byte), (1, 'local_clienttype', c_long), (1, 'masterip', c_char_p), (
-1, 'masterport', c_ushort), (1, 'slaveip', c_char_p), (1, 'slaveport', c_ushort), (1, 'author_username', c_char_p), (
-                            1, 'author_pwd', c_char_p), (1, 'add_info', c_char_p)
+    1, 'masterport', c_ushort), (1, 'slaveip', c_char_p), (1, 'slaveport', c_ushort), (
+                                1, 'author_username', c_char_p), (
+                                1, 'author_pwd', c_char_p), (1, 'add_info', c_char_p)
 
 _c_fntyp_SendData = CFUNCTYPE(c_int, c_byte, c_byte, c_byte, c_int, c_int, c_int, c_void_p, c_int)
 _paramflags_SendData = (1, 'local_clientid', c_byte), (1, 'cmd', c_byte), (1, 'cmdtype', c_byte), (
-1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (
-                       1, 'size', c_int)
+    1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (
+                           1, 'size', c_int)
 
 _c_fntyp_RemoteInvokeFlow = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
 _paramflags_RemoteInvokeFlow = (1, 'local_clientid', c_byte), (1, 'server_unitid', c_int), (1, 'processindex', c_int), (
-1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (
-                               1, 'in_valuelist', c_char_p)
+    1, 'projectid', c_char_p), (1, 'flowid', c_char_p), (1, 'mode', c_int), (1, 'timeout', c_int), (
+                                   1, 'in_valuelist', c_char_p)
 
 _c_fntyp_SendPing = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_int, c_void_p, c_int)
 _paramflags_SendPing = (1, 'local_clientid', c_byte), (1, 'dst_unitid', c_int), (1, 'dst_clientid', c_int), (
-1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
+    1, 'dst_clienttype', c_int), (1, 'data', c_void_p), (1, 'size', c_int)
 
 _c_fntyp_SetTraceStr = CFUNCTYPE(None, _c_fntyp_trace_str_cb, _c_fntyp_trace_str_cb)
 _paramflags_SetTraceStr = (1, 'tracestr', _c_fntyp_trace_str_cb), (1, 'traceerr', _c_fntyp_trace_str_cb)
@@ -90,7 +94,7 @@ _paramflags_SetCallBackFnEx = (1, 'callback_name', c_char_p), (1, 'callbackfn', 
 
 _c_fntyp_SendNotify = CFUNCTYPE(c_int, c_byte, c_int, c_int, c_char_p, c_char_p, c_int, c_int, c_char_p)
 _paramflags_SendNotify = (1, 'local_clientid', c_byte), (1, 'server_unitid', c_int), (1, 'processindex', c_int), (
-1, 'projectid', c_char_p), (1, 'title', c_char_p), (1, 'mode', int), (1, 'expires', c_int), (1, 'param', c_char_p)
+    1, 'projectid', c_char_p), (1, 'title', c_char_p), (1, 'mode', int), (1, 'expires', c_int), (1, 'param', c_char_p)
 
 
 # ===============================================================================

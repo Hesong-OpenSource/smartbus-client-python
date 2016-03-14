@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
 
     smartbus.netclient.Client.initialize(17)
-    cli = smartbus.netclient.Client(localClientId=0, localClientType=20, masterHost='10.4.62.45', masterPort=8089,
+    cli = smartbus.netclient.Client(localClientId=0, local_client_type=20, master_host='10.4.62.45', master_port=8089,
                                     encoding='utf-8')
     cli.onConnectSuccess = onConnectSuccess
     cli.onReceiveText = onReceiveText

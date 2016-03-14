@@ -78,7 +78,7 @@ class Test(unittest.TestCase):
 
         Client.initialize(26)
         print('library file = {}'.format(clib._lib))
-        _cli = cls._cli = Client(localClientId=0, localClientType=25, masterHost='10.4.62.45', masterPort=8089,
+        _cli = cls._cli = Client(localClientId=0, local_client_type=25, master_host='10.4.62.45', master_port=8089,
                                  encoding='utf-8')
 
         _cli.onConnectSuccess = connect_succeed

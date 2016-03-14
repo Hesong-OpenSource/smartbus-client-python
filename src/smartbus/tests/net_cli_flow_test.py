@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
     smartbus.netclient.Client.initialize(26)
     print('library file = {}'.format(smartbus.netclient._c_smartbus_netcli_interface._lib))
-    cli = smartbus.netclient.Client(localClientId=0, localClientType=25, masterHost='10.4.62.45', masterPort=8089,
+    cli = smartbus.netclient.Client(localClientId=0, local_client_type=25, master_host='10.4.62.45', master_port=8089,
                                     encoding='utf-8')
 
     cli.onConnectSuccess = connect_succeed
