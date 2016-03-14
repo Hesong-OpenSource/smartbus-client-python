@@ -7,16 +7,12 @@
 
 """
 
-from ._c_smartbus import SMARTBUS_ERR_OK, SMARTBUS_ERR_ARGUMENT, SMARTBUS_ERR_CONN_NOT_ESTAB, \
-    SMARTBUS_ERR_CONNECT_BREAK, SMARTBUS_ERR_AUTHOR, \
-    SMARTBUS_ERR_USER, SMARTBUS_ERR_PWD, SMARTBUS_ERR_BUFF_FULL, SMARTBUS_ERR_NODE_NOTEXIST, SMARTBUS_ERR_CLI_NOTEXIST, \
-    SMARTBUS_ERR_CONNECTED, \
-    SMARTBUS_ERR_SEND_OWN, SMARTBUS_ERR_UNITID_INVALID, SMARTBUS_ERR_CLIENTID_INVALID, SMARTBUS_ERR_NON_INIT, \
-    SMARTBUS_ERR_MAX_DATASIZE, \
-    SMARTBUS_ERR_CMDTYPE_INVALID, SMARTBUS_ERR_CLIENTTYPE_INVALID, SMARTBUS_ERR_OTHER, SMARTBUS_ERR_SEND_DATA, \
-    SMARTBUS_ERR_MEM_ALLOC, \
-    SMARTBUS_ERR_ESTABLI_CONNECT, SMARTBUS_ERR_CLI_TOOMANY, SMARTBUS_ERR_CLI_EXIST, SMARTBUS_ERR_DEST_NONEXIST, \
-    SMARTBUS_ERR_REGISTERED_REPEAT, \
+from ._c.mutual import SMARTBUS_ERR_OK, SMARTBUS_ERR_ARGUMENT, SMARTBUS_ERR_CONN_NOT_ESTAB, SMARTBUS_ERR_CONNECT_BREAK, \
+    SMARTBUS_ERR_AUTHOR, SMARTBUS_ERR_USER, SMARTBUS_ERR_PWD, SMARTBUS_ERR_BUFF_FULL, SMARTBUS_ERR_NODE_NOTEXIST, \
+    SMARTBUS_ERR_CLI_NOTEXIST, SMARTBUS_ERR_CONNECTED, SMARTBUS_ERR_SEND_OWN, SMARTBUS_ERR_UNITID_INVALID, \
+    SMARTBUS_ERR_CLIENTID_INVALID, SMARTBUS_ERR_NON_INIT, SMARTBUS_ERR_MAX_DATASIZE, SMARTBUS_ERR_CMDTYPE_INVALID, \
+    SMARTBUS_ERR_CLIENTTYPE_INVALID, SMARTBUS_ERR_SEND_DATA, SMARTBUS_ERR_MEM_ALLOC, SMARTBUS_ERR_ESTABLI_CONNECT, \
+    SMARTBUS_ERR_CLI_TOOMANY, SMARTBUS_ERR_CLI_EXIST, SMARTBUS_ERR_DEST_NONEXIST, SMARTBUS_ERR_REGISTERED_REPEAT, \
     SMARTBUS_ERR_TIMEOUT, SMARTBUS_ERR_OTHER
 
 error_code_message = {
@@ -78,7 +74,7 @@ class SmartBusError(Exception):
     """
 
     def __init__(self, code, message):
-        Exception.__init__(self, code, message)
+        super(Exception, self).__init__(self, 'smartbus wrong API return code[{}]: "{}".'.format(code, message))
         self._code = code
         self._message = message
 
@@ -95,7 +91,7 @@ class SmartBusError(Exception):
         return self._message
 
 
-def check_restval(code, raise_if_err=True):
+def check(code, raise_if_err=True):
     """检查 SmartBus 客户端 C-API 的返回结果是否正确
 
     :param code: 要检查的返回结果编码
@@ -106,13 +102,14 @@ def check_restval(code, raise_if_err=True):
         当 `raise_if_err` 为 True 时，无错误则返回 None，有错误则抛出错误异常；
         当 `raise_if_err` 为 False 时，无错误则返回 None，有错误则返回错误异常实例。
     """
+    code = int(code)
     if code != SMARTBUS_ERR_OK:
         try:
             msg = error_code_message[code]
         except KeyError:
             msg = 'UNDEFINED_ERROR'
-        smartbus_err = SmartBusError(code, msg)
+        exc = SmartBusError(code, msg)
         if raise_if_err:
-            raise smartbus_err
+            raise exc
         else:
-            return smartbus_err
+            return exc

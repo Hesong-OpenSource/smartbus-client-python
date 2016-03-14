@@ -1,124 +1,103 @@
 # -*- coding: utf-8 -*-
 
-"""辅助功能
-:date: 2013-3-4
-:author: tanbro
+"""
+Some helper functions
 """
 
-import sys
+import logging
 
-if sys.version_info[0] < 3:
-    __all__ = ['default_encoding', 'ifnone', 'to_bytes', 'to_unicode', 'to_str']
-else:
-    __all__ = ['default_encoding', 'ifnone', 'unicode', 'to_bytes', 'to_unicode', 'to_str']
+__all__ = ['to_bytes', 'to_str', 'to_unicode', 'LoggerMixin']
 
-default_encoding = sys.getfilesystemencoding()
-#: 默认编码
-#:
-#: :func:`sys.getfilesystemencoding` 的返回值
-
-ifnone = lambda a, b: b if a is None else a
-#: 如果第一个参数为None，则返回第二个参数，否则返回第一个参数
-#: :param a: 第一个参数
-#: :param b: 第二个参数
-#: :return: 如果 a 为 None，则返回 b，否则返回 a。
-#:
-#: 相当于：
-#:
-#: .. code::
-#:
-#:     def ifnone(a, b):
-#:        if a is None:
-#:            return b
-#:        else:
-#:            return a
-#:
-#: 例如：
-#:
-#: .. code::
-#:
-#:     v1 = 1
-#:     v2 = 2
-#:     ifnone(v1, v2)
-#:
-#: 那么，返回值为1。
-#:
-#: 如果：
-#:
-#: .. code::
-#:
-#:     v1 = None
-#:     v2 = 2
-#:     ifnone(v1, v2)
-#:
-#: 那么，返回值为2。
-
-if sys.version_info[0] < 3:
-    def to_bytes(s, encoding=default_encoding):
-        """将 `str` 转为 `bytes`
-
-        :param s: 要转换的字符串
-        :type s: str, unicode, bytes, None
-        :param encoding: 编码，默认为系统编码。
-        """
-        if isinstance(s, (str, type(None))):
-            return s
-        elif isinstance(s, unicode):
-            return s.encode(encoding)
-        else:
-            raise TypeError()
-
-
-    def to_unicode(s, encoding=default_encoding):
-        """将 `str` 转为 `unicode`
-
-        :param s: 要转换的字符串
-        :type s: str, unicode, bytes, None
-        :param encoding: 编码，默认为系统编码。
-        """
-        if isinstance(s, (unicode, type(None))):
-            return s
-        elif isinstance(s, str):
-            return s.decode(encoding)
-        else:
-            raise TypeError()
-
-
-    to_str = to_bytes
-    #: 将 `unicode` 或者 `bytes` 转为系统 `str`
-else:
+if bytes != str:  # Python 3
+    #: Define text string data type, same as that in Python 2.x.
     unicode = str
 
 
-    def to_bytes(s, encoding=default_encoding):
-        """将 `str` 转为 `bytes`
+def to_bytes(s, encoding='utf-8'):
+    """Convert to `bytes` string.
 
-        :param s: 要转换的字符串
-        :type s: str, unicode, bytes, None
-        :param encoding: 编码，默认为系统编码。
+    :param s: String to convert.
+    :param str encoding: Encoding codec.
+    :return: `bytes` string, it's `bytes` or `str` in Python 2.x, `bytes` in Python 3.x.
+    :rtype: bytes
+
+    * In Python 2, convert `s` to `bytes` if it's `unicode`.
+    * In Python 2, return original `s` if it's not `unicode`.
+    * In Python 2, it equals to :func:`to_str`.
+    * In Python 3, convert `s` to `bytes` if it's `unicode` or `str`.
+    * In Python 3, return original `s` if it's neither `unicode` nor `str`.
+    """
+    if isinstance(s, unicode):
+        return s.encode(encoding)
+    else:
+        return s
+
+
+def to_str(s, encoding='utf-8'):
+    """Convert to `str` string.
+
+    :param s: String to convert.
+    :param str encoding: Decoding codec.
+    :return: `str` string, it's `bytes` in Python 2.x, `unicode` or `str` in Python 3.x.
+    :rtype: str
+
+    * In Python 2, convert `s` to `str` if it's `unicode`.
+    * In Python 2, return original `s` if it's not `unicode`.
+    * In Python 2, it equals to :func:`to_bytes`.
+    * In Python 3, convert `s` to `str` if it's `bytes`.
+    * In Python 3, return original `s` if it's not `bytes`.
+    * In Python 3, it equals to :func:`to_unicode`.
+    """
+    if bytes == str:  # Python 2
+        return to_bytes(s, encoding)
+    else:  # Python 3
+        return to_unicode(s, encoding)
+
+
+def to_unicode(s, encoding='utf-8'):
+    """Convert to `unicode` string.
+
+    :param s: String to convert.
+    :param str encoding: Encoding codec.
+    :return: `unicode` string, it's `unicode` in Python 2.x, `str` or `unicode` in Python 3.x.
+    :rtype: unicode
+
+    * In Python 2, convert `s` to `unicode` if it's `str` or `bytes`.
+    * In Python 2, return original `s` if it's neither `str` or `bytes`.
+    * In Python 3, convert `s` to `str` or `unicode` if it's `bytes`.
+    * In Python 3, return original `s` if it's not `bytes`.
+    * In Python 3, it equals to :func:`to_str`.
+    """
+    if isinstance(s, bytes):
+        return s.decode(encoding)
+    else:
+        return s
+
+
+class LoggerMixin:
+    """Mixin Class provide a :attr:`logger` property
+    """
+
+    @classmethod
+    def get_logger(cls):
+        """`logger` instance.
+
+        :rtype: logging.Logger
+
+        logger name format is `ModuleName.ClassName`
         """
-        if isinstance(s, (bytes, type(None))):
-            return s
-        elif isinstance(s, str):
-            return s.encode(encoding)
-        else:
-            raise TypeError()
+        try:
+            name = '{0.__module__:s}.{0.__qualname__:s}'.format(cls)
+        except AttributeError:
+            name = '{0.__module__:s}.{0.__name__:s}'.format(cls)
+        return logging.getLogger(name)
 
+    @property
+    def logger(self):
+        """`logger` instance.
 
-    def to_unicode(s, encoding=default_encoding):
-        """将 `str` 转为 `unicode`
+        :rtype: logging.Logger
 
-        :param s: 要转换的字符串
-        :type s: str, unicode, bytes, None
-        :param encoding: 编码，默认为系统编码。
+        logger name format is `ModuleName.ClassName`
         """
-        if isinstance(s, (str, type(None))):
-            return s
-        elif isinstance(s, bytes):
-            return s.decode(encoding)
-        else:
-            raise TypeError()
-
-
-    to_str = to_unicode
-    #: 将 `unicode` 或者 `bytes` 转为系统 `str`
+        return self.get_logger()
