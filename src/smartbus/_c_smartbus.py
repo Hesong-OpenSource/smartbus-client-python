@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-'''smartbus.h 的Python封装
+"""smartbus.h 的Python封装
 
 该模块大致实现了与 smartbus.h 一对一的 ctyps 封装。
 请参考 smartbus.h
 
 :date: 2013-6-1
 :author: lxy@hesong.ent
-'''
+"""
 
 import os
 from ctypes import CFUNCTYPE, Structure, POINTER, c_byte, c_char, c_ushort, c_int, c_long, c_void_p, c_char_p
@@ -18,56 +18,56 @@ else:
     CALLBACKFUNCTYPE = CFUNCTYPE
 
 MAX_GLOBAL_SMART_NODE = 16
-'''全局起始单元（节点）编号
-'''
+"""全局起始单元（节点）编号
+"""
 
 MIN_SMARTBUS_NETCLI_UNITID = 16
-'''最小net客户端unitid值为16
+"""最小net客户端unitid值为16
 
 Net客户端的unitid不能小于16
-'''
+"""
 
 MAX_SMARTBUS_NETCLI_UNITID_NUM = 32
-'''net客户端值范围是16-47，全局最多32个。
-'''
+"""net客户端值范围是16-47，全局最多32个。
+"""
 
 MAX_SMARTBUS_NODE_NUM = MAX_GLOBAL_SMART_NODE + MAX_SMARTBUS_NETCLI_UNITID_NUM
-'''最大节点数
+"""最大节点数
 
 16 + 32 = 48 最大节点数
-'''
+"""
 
 MAX_SMARTBUS_NODE_CLI_NUM = 8
-'''最大节点内的客户端数
-'''
+"""最大节点内的客户端数
+"""
 
 SMARTBUS_CMDTYPE_INTERNAL = 0
-'''内部
-'''
+"""内部
+"""
 
 SMARTBUS_CMDTYPE_SYSTEM = 1
-'''系统
-'''
+"""系统
+"""
 
 SMARTBUS_CMDTYPE_FILE = 2
-'''文件
-'''
+"""文件
+"""
 
 SMARTBUS_CMDTYPE_USER = 3
-'''用户数据
-'''
+"""用户数据
+"""
 
 SMARTBUS_CMDTYPE_GUARD_CMD = 4
-'''守候实例命令
-'''
+"""守候实例命令
+"""
 
 SMARTBUS_CMDTYPE_GUARD_FILE = 5
-'''守候实例文件传送
-'''
+"""守候实例文件传送
+"""
 
 SMARTBUS_SYSCMD_PING_ACK = 8
-'''Ping应答包的cmdtype
-'''
+"""Ping应答包的cmdtype
+"""
 
 SMARTBUS_NODECLI_TYPE_NULL = 0
 SMARTBUS_NODECLI_TYPE_NODE = 1
@@ -79,80 +79,80 @@ SMARTBUS_NODECLI_TYPE_AGENT = 4
 SMARTBUS_ERR_OK = 0
 
 SMARTBUS_ERR_ARGUMENT = -1
-'''无效参数'''
+"""无效参数"""
 
 SMARTBUS_ERR_CONN_NOT_ESTAB = -2
-'''连接尚未建立'''
+"""连接尚未建立"""
 
 SMARTBUS_ERR_CONNECT_BREAK = -3
 
 SMARTBUS_ERR_AUTHOR = -4
-'''验证失败'''
+"""验证失败"""
 
 SMARTBUS_ERR_USER = -5
-'''错误的用户名'''
+"""错误的用户名"""
 
 SMARTBUS_ERR_PWD = -6
-'''错误的密码'''
+"""错误的密码"""
 
 SMARTBUS_ERR_BUFF_FULL = -7
-'''缓冲区满'''
+"""缓冲区满"""
 
 SMARTBUS_ERR_NODE_NOTEXIST = -8
-'''节点不存在'''
+"""节点不存在"""
 
 SMARTBUS_ERR_CLI_NOTEXIST = -9
-'''客户端不存在'''
+"""客户端不存在"""
 
 SMARTBUS_ERR_CONNECTED = -10
-'''重复连接'''
+"""重复连接"""
 
 SMARTBUS_ERR_SEND_OWN = -11
-'''发送给自己'''
+"""发送给自己"""
 
 SMARTBUS_ERR_UNITID_INVALID = -12
-'''无效的unitid'''
+"""无效的unitid"""
 
 SMARTBUS_ERR_CLIENTID_INVALID = -13
 """无效的clientid"""
 
 SMARTBUS_ERR_NON_INIT = -14
-'''尚未初始化'''
+"""尚未初始化"""
 
 SMARTBUS_ERR_MAX_DATASIZE = -15
-'''发送的数据太大'''
+"""发送的数据太大"""
 
 SMARTBUS_ERR_CMDTYPE_INVALID = -16
 
 SMARTBUS_ERR_CLIENTTYPE_INVALID = -17
-'''无效的客户端类型'''
+"""无效的客户端类型"""
 
 SMARTBUS_ERR_SEND_DATA = -18
-'''发送数据错误'''
+"""发送数据错误"""
 
 SMARTBUS_ERR_MEM_ALLOC = -19
-'''分配内存错误'''
+"""分配内存错误"""
 
 SMARTBUS_ERR_ESTABLI_CONNECT = -20
-'''建立连接失败'''
+"""建立连接失败"""
 
 SMARTBUS_ERR_CLI_TOOMANY = -21
-'''客户端太多'''
+"""客户端太多"""
 
 SMARTBUS_ERR_CLI_EXIST = -22
-'''客户端已存在'''
+"""客户端已存在"""
 
 SMARTBUS_ERR_DEST_NONEXIST = -23
-'''目标不存在'''
+"""目标不存在"""
 
 SMARTBUS_ERR_REGISTERED_REPEAT = -24
-'''重复注册'''
+"""重复注册"""
 
 SMARTBUS_ERR_TIMEOUT = -25
-'''超时'''
+"""超时"""
 
 SMARTBUS_ERR_OTHER = -99
-'''其它错误'''
+"""其它错误"""
 
 
 MAX_SMARTBUS_IPADDR_SIZE = 64
@@ -169,8 +169,8 @@ CONNECTED_STATUS_OK = 7
 
 
 class _PACKET_HEAD(Structure):
-    '''接收数据包结构体的 pyton ctypes 封装类
-    '''
+    """接收数据包结构体的 pyton ctypes 封装类
+    """
     _pack_ = 1  # 设定为1字节对齐
     _fields_ = [
         ('head_flag', c_ushort),  # 头标识    : 0x5b15
@@ -199,18 +199,18 @@ _c_fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, c_char_p)
 
 
 class PackInfo(object):
-    '''接收数据包信息
+    """接收数据包信息
 
     每当接收到数据时，所触发的事件中，都包含该类型的参数，记录了一些数据包的相关信息
 
     对应 SMARTBUS_PACKET_HEAD 结构体的 ctypes 数据类型 :class:`_PACKET_HEAD` 的再次封装
-    '''
+    """
 
     def __init__(self, lp_head_struct):
-        '''
+        """
         构造函数
         :param lp_head_struct: :class:`_PACKET_HEAD` 结构体指针
-        '''
+        """
         self.__cmd = 0
         self.__cmdType = 0
         self.__srcUnitClientType = 0
@@ -264,64 +264,64 @@ dataLen=%s>' % (
 
     @property
     def cmd(self):
-        '''命令
+        """命令
 
         一条 SmartBus 数据的命令关键字
-        '''
+        """
         return self.__cmd
 
     @property
     def cmdType(self):
-        '''命令类型
+        """命令类型
 
         一条 SmartBus 数据的命令类型
-        '''
+        """
         return self.__cmdType
 
     @property
     def srcUnitClientType(self):
-        '''发送者客户端类型
-        '''
+        """发送者客户端类型
+        """
         return self.__srcUnitClientType
 
     @property
     def srcUnitId(self):
-        '''发送者节点ID
-        '''
+        """发送者节点ID
+        """
         return self.__srcUnitId
 
     @property
     def srcUnitClientId(self):
-        '''发送者客户端ID
-        '''
+        """发送者客户端ID
+        """
         return self.__srcUnitClientId
 
     @property
     def dstUnitClientType(self):
-        '''接收者客户端类型
-        '''
+        """接收者客户端类型
+        """
         return self.__dstUnitClientType
 
     @property
     def dstUnitId(self):
-        '''接收者节点ID
-        '''
+        """接收者节点ID
+        """
         return self.__dstUnitId
 
     @property
     def dstUnitClientId(self):
-        '''接收者客户端ID
-        '''
+        """接收者客户端ID
+        """
         return self.__dstUnitClientId
 
     @property
     def packetSize(self):
-        '''包长度
-        '''
+        """包长度
+        """
         return self.__packetSize
 
     @property
     def dataLen(self):
-        '''正文数据长度
-        '''
+        """正文数据长度
+        """
         return self.__dataLen
