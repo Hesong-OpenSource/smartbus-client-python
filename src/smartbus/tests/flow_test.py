@@ -58,7 +58,7 @@ if __name__ == '__main__':
     while True:
         s = readln()
         #  'mbcs'
-        # cli.send(cmd=1, cmdType=1, dstUnitId=0, dstClientId=15, dstClientType=15, txt=s)
+        # cli.send(cmd=1, cmd_type=1, dst_unit_id=0, dstClientId=15, dstClientType=15, txt=s)
         s = to_unicode(s)
         data = dict(
             jsonrpc='2.0',

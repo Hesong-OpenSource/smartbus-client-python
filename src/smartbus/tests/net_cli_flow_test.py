@@ -68,5 +68,5 @@ if __name__ == '__main__':
 
     while True:
         s = readln()
-        # cli.sendText(cmd=1, cmdType=1, dstUnitId=0, dstClientId=15, dstClientType=15, txt=s)
+        # cli.sendText(cmd=1, cmd_type=1, dst_unit_id=0, dstClientId=15, dstClientType=15, txt=s)
         cli.startup_flow(0, 0, 'Project2', '_webchat_rpc', {'method': 'RobotConnected', 'params': ['robot-001']}, True, 5)

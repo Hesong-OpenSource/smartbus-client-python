@@ -113,7 +113,7 @@ class FlowJsonRpcTest(unittest.TestCase):
                         msg = params['msg']
                     msg = 'ReEcho: ' + msg
                     txt = json.dumps({'jsonrpc': jsonrpc_version, 'id': id_, 'result': msg})
-                self._client.send(0, CMDTYPE_JSONRPC_RES, packInfo.srcUnitId, packInfo.srcUnitClientId,
+                self._client.send(0, CMDTYPE_JSONRPC_RES, packInfo.src_unit_id, packInfo.srcUnitClientId,
                                   packInfo.srcUnitClientType, txt)
 
             pass

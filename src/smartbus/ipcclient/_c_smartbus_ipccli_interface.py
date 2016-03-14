@@ -46,7 +46,7 @@ _c_fn_SendNotify = None
 # 库函数类型
 
 _c_fntyp_Init = CFUNCTYPE(c_int, c_int, c_int)
-_paramflags_Init = (1, 'clienttype', 0), (1, 'clientid', 0)
+_paramflags_Init = (1, 'client_type', 0), (1, 'client_id', 0)
 
 _c_fntyp_Release = CFUNCTYPE(None)
 _paramflags_Release = ()
@@ -83,18 +83,18 @@ _paramflags_SendNotify = (1, 'server_unitid', c_int), (1, 'processindex', c_int)
     1, 'title', c_char_p), (1, 'mode', int), (1, 'expires', c_int), (1, 'param', c_char_p)
 
 
-def load_lib(filepath=lib_filename):
+def load_lib(file_path=lib_filename):
     """加载共享/动态库
 
-    :param filepath: 动态/共享库文件名
+    :param file_path: 动态/共享库文件名
     :return: 动态/共享库对象
     """
-    if not filepath:
-        filepath = lib_filename
+    if not file_path:
+        file_path = lib_filename
     global _lib
     if not _lib:
         try:
-            _lib = CDLL(filepath, mode=RTLD_GLOBAL)
+            _lib = CDLL(file_path, mode=RTLD_GLOBAL)
             global _c_fn_Init
             _c_fn_Init = _c_fntyp_Init(('SmartBusIpcCli_Init', _lib), _paramflags_Init)
             global _c_fn_Release
@@ -122,6 +122,6 @@ def load_lib(filepath=lib_filename):
         except Exception as e:
             if _lib:
                 _lib = None
-            print(filepath, e, file=sys.stdout)
+            print(file_path, e, file=sys.stdout)
             raise
     return _lib

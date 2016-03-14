@@ -60,7 +60,7 @@ def start_server(*args, **kwargs):
         print('connect error:', unitId, errno)
 
     def on_receive(packInfo, txt):
-        cli.send(9, 9, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
+        cli.send(9, 9, packInfo.src_unit_id, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
 
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         print('flow respond:', packInfo, project, invokeId, result)
@@ -141,9 +141,9 @@ USAGE
                             help="smartbus Server Port. [default: %(default)s]")
         parser.add_argument("-u", "--unit_id-id", dest="unit_id", type=int, default=15,
                             help="smartbus IPC Unit ID")
-        parser.add_argument("-c", "--client-id", dest="clientid", type=int, default=0,
+        parser.add_argument("-c", "--client-id", dest="client_id", type=int, default=0,
                             help="smartbus IPC client ID. [default: %(default)s]")
-        parser.add_argument("-t", "--client-type", dest="clienttype", type=int, default=-1,
+        parser.add_argument("-t", "--client-type", dest="client_type", type=int, default=-1,
                             help="smartbus IPC client ID type. [default: %(default)s]")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
 

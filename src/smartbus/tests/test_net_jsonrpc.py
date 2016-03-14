@@ -95,7 +95,7 @@ def run_echo_server(started_cond, term_cond):
                 raise NameError('Unknown method "{}"'.format(method))
         except Exception as e:
             txt = json.dumps({'jsonrpc': jsonrpc_version, 'id': id_, 'error': {'message': str(e), 'data': None}})
-        client.send(-1, CMDTYPE_JSONRPC_RES, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.srcUnitClientType,
+        client.send(-1, CMDTYPE_JSONRPC_RES, packInfo.src_unit_id, packInfo.srcUnitClientId, packInfo.srcUnitClientType,
                     txt)
 
     pass

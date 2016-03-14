@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 import logging
 from ctypes import create_string_buffer, string_at, byref, c_byte, c_int, c_long, c_ushort, c_void_p, c_char_p
-
 import json
 
 from . import _c_smartbus_netcli_interface as sbncif
@@ -26,10 +25,19 @@ class Client:
 
     这个类封装了 SmartBus Network 客户端的一系列方法与事件
     """
+    _instances = {}
     _lib = None
     _unit_id = None
-    _instances = {}
+    _logger = None
+    _logging_option = True, logging.DEBUG, logging.ERROR
     _on_global_connect = None
+    _c_fn_trace_cb = None
+    _c_fn_trace_err_cb = None
+    _c_fn_connection_cb = None
+    _c_fn_receive_data_cb = None
+    _c_fn_disconnect_cb = None
+    _c_fn_invoke_flow_ret_cb = None
+    _c_fn_global_connect_cb = None
 
     def __init__(self, local_client_id, local_client_type, master_host, master_port, slaver_host=None,
                  slaver_port=0xffff, author_usr=None, author_pwd=None, ext_info=None, encoding=default_encoding):
@@ -48,10 +56,9 @@ class Client:
         """
         if not Client.is_initialized():
             raise errors.NotInitializedError()
-        cls = type(self)
-        if local_client_id in cls._instances:
+        if local_client_id in Client._instances:
             raise errors.AlreadyExistsError()
-        cls._instances[local_client_id] = self
+        Client._instances[local_client_id] = self
         self._local_client_id = local_client_id
         self._local_client_type = local_client_type
         self._master_host = master_host
@@ -77,8 +84,7 @@ class Client:
         self._c_ext_info = c_char_p(to_bytes(self._ext_info, self.encoding))
 
     @classmethod
-    def initialize(cls, unit_id, on_global_connect=None, library_file=sbncif.lib_filename,
-                   logging_option=(True, logging.DEBUG, logging.ERROR)):
+    def initialize(cls, unit_id, on_global_connect=None, library_file='', logging_option=None):
         """初始化
 
         调用其他方法前，必须首先初始化库
@@ -92,44 +98,36 @@ class Client:
             raise errors.AlreadyInitializedError()
         # if not isinstance(unit_id, int):
         #            raise TypeError('The argument "unit" should be an integer')
-        cls.__logging_option = logging_option
-        cls.__logger = logging.getLogger('{}.{}'.format(
-            cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
-        cls.__logger.info('initialize')
+        cls._logging_option = logging_option or cls._logging_option
+        cls._logger = logging.getLogger(
+            '{}.{}'.format(cls.__module__, cls.__qualname__ if hasattr(cls, '__qualname__') else cls.__name__))
+        cls._logger.info('initialize')
         if not library_file:
             library_file = sbncif.lib_filename
-        cls.__logger.warn(u'load %s', library_file)
+        cls._logger.warn(u'load %s', library_file)
         cls._lib = sbncif.load_lib(library_file)
         errors.check_restval(sbncif._c_fn_Init(unit_id))
         cls._unit_id = unit_id
         cls._on_global_connect = on_global_connect
-        cls.__c_fn_connection_cb = sbncif._c_fntyp_connection_cb(
-            cls._connection_cb)
-        cls.__c_fn_recvdata_cb = sbncif._c_fntyp_recvdata_cb(cls._receive_data_cb)
-        cls.__c_fn_disconnect_cb = sbncif._c_fntyp_disconnect_cb(
-            cls._disconnect_cb)
-        cls.__c_fn_invokeflow_ret_cb = sbncif._c_fntyp_invokeflow_ret_cb(
-            cls._invoke_flow_ret_cb)
-        cls.__c_fn_invokeflow_ack_cb = sbncif._c_fntyp_invokeflow_ret_cb(
-            cls._invoke_flow_ack_cb)
-        cls.__c_fn_global_connect_cb = sbncif._c_fntyp_global_connect_cb(
-            cls._global_connect_cb)
+        cls._c_fn_connection_cb = sbncif._c_fntyp_connection_cb(cls._connection_cb)
+        cls._c_fn_receive_data_cb = sbncif._c_fntyp_recvdata_cb(cls._receive_data_cb)
+        cls._c_fn_disconnect_cb = sbncif._c_fntyp_disconnect_cb(cls._disconnect_cb)
+        cls._c_fn_invoke_flow_ret_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls._invoke_flow_ret_cb)
+        cls._c_fn_invoke_flow_ack_cb = sbncif._c_fntyp_invokeflow_ret_cb(cls._invoke_flow_ack_cb)
+        cls._c_fn_global_connect_cb = sbncif._c_fntyp_global_connect_cb(cls._global_connect_cb)
         sbncif._c_fn_SetCallBackFn(
-            cls.__c_fn_connection_cb,
-            cls.__c_fn_recvdata_cb,
-            cls.__c_fn_disconnect_cb,
-            cls.__c_fn_invokeflow_ret_cb,
-            cls.__c_fn_global_connect_cb,
+            cls._c_fn_connection_cb,
+            cls._c_fn_receive_data_cb,
+            cls._c_fn_disconnect_cb,
+            cls._c_fn_invoke_flow_ret_cb,
+            cls._c_fn_global_connect_cb,
             c_void_p(None)
         )
-        sbncif._c_fn_SetCallBackFnEx(
-            c_char_p(b'smartbus_invokeflow_ack_cb'), cls.__c_fn_invokeflow_ack_cb)
+        sbncif._c_fn_SetCallBackFnEx(c_char_p(b'smartbus_invokeflow_ack_cb'), cls._c_fn_invoke_flow_ack_cb)
         if logging_option[0]:
-            cls.__c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls._trace_cb)
-            cls.__c_fn_traceerr_cb = sbncif._c_fntyp_trace_str_cb(
-                cls._traceerr_cb)
-            sbncif._c_fn_SetTraceStr(
-                cls.__c_fn_trace_cb, cls.__c_fn_traceerr_cb)
+            cls._c_fn_trace_cb = sbncif._c_fntyp_trace_str_cb(cls._trace_cb)
+            cls._c_fn_trace_err_cb = sbncif._c_fntyp_trace_str_cb(cls._trace_err_cb)
+            sbncif._c_fn_SetTraceStr(cls._c_fn_trace_cb, cls._c_fn_trace_err_cb)
 
     @classmethod
     def finalize(cls):
@@ -149,96 +147,94 @@ class Client:
         return cls._unit_id
 
     @classmethod
-    def _connection_cb(cls, arg, local_clientid, accesspoint_unitid, ack):
-        inst = cls._instances.get(local_clientid, None)
+    def _connection_cb(cls, arg, local_client_id, access_point_unit_id, ack):
+        inst = cls._instances.get(local_client_id, None)
         if inst is not None:
-            inst._unitid = accesspoint_unitid
+            inst._unit_id = access_point_unit_id
             if ack == SMARTBUS_ERR_OK:  # 连接成功
                 if hasattr(inst, 'on_connect_success'):
-                    inst.onConnectSuccess(accesspoint_unitid)
+                    inst.on_connect_success(access_point_unit_id)
             else:  # 连接失败
                 if hasattr(inst, 'on_connect_fail'):
-                    inst.onConnectFail(accesspoint_unitid, ack)
+                    inst.on_connect_fail(access_point_unit_id, ack)
 
     @classmethod
-    def _disconnect_cb(cls, param, local_clientid):
-        inst = cls._instances.get(local_clientid, None)
+    def _disconnect_cb(cls, param, local_client_id):
+        inst = cls._instances.get(local_client_id, None)
         if inst is not None:
             if hasattr(inst, 'on_disconnect'):
                 inst.onDisconnect()
 
-    # @todo: TODO: 广播的处理
+    # TODO: 广播的处理
     @classmethod
-    def _receive_data_cb(cls, param, local_clientid, head, data, size):
-        inst = cls._instances.get(local_clientid, None)
+    def _receive_data_cb(cls, param, local_client_id, head, data, size):
+        inst = cls._instances.get(local_client_id, None)
         if inst is not None:
             if hasattr(inst, 'on_receive_text'):
-                packInfo = PackInfo(head)
+                pack_info = PackInfo(head)
                 txt = None
                 if data:
-                    bytestr = string_at(data, size)
-                    bytestr = bytestr.strip(b'\x00')
-                    if packInfo.srcUnitClientType == SMARTBUS_NODECLI_TYPE_IPSC:
+                    byte_str = string_at(data, size)
+                    byte_str = byte_str.strip(b'\x00')
+                    if pack_info.src_unit_client_type == SMARTBUS_NODECLI_TYPE_IPSC:
                         try:
-                            txt = to_str(bytestr, 'cp936')
+                            txt = to_str(byte_str, 'cp936')
                         except UnicodeDecodeError:
-                            txt = to_str(bytestr, 'utf8')
+                            txt = to_str(byte_str, 'utf8')
                     else:
-                        txt = to_str(bytestr, inst.encoding)
-                inst.onReceiveText(packInfo, txt)
+                        txt = to_str(byte_str, inst.encoding)
+                inst.onReceiveText(pack_info, txt)
 
     @classmethod
-    def _invoke_flow_ret_cb(cls, arg, local_clientid, head, projectid, invoke_id, ret, param):
-        inst = cls._instances.get(local_clientid, None)
+    def _invoke_flow_ret_cb(cls, arg, local_client_id, head, project_id, invoke_id, ret, param):
+        inst = cls._instances.get(local_client_id, None)
         if inst is not None:
             if ret == 1:
                 if hasattr(inst, 'on_flow_resp'):
-                    packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid, 'cp936').strip('\x00')
+                    pack_info = PackInfo(head)
+                    txt_project_id = to_str(project_id, 'cp936').strip('\x00')
                     txt_param = to_str(param, 'cp936').strip('\x00').strip()
                     if txt_param:
                         py_param = json.loads(txt_param)
                     else:
                         py_param = None
-                    inst.onInvokeFlowRespond(
-                        packInfo, txt_projectid, invoke_id, py_param)
+                    inst.on_flow_resp(pack_info, txt_project_id, invoke_id, py_param)
             elif ret == SMARTBUS_ERR_TIMEOUT:
                 if hasattr(inst, 'on_flow_timeout'):
-                    packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid, 'cp936').strip('\x00')
-                    inst.onInvokeFlowTimeout(
-                        packInfo, txt_projectid, invoke_id)
+                    pack_info = PackInfo(head)
+                    txt_project_id = to_str(project_id, 'cp936').strip('\x00')
+                    inst.on_flow_timeout(pack_info, txt_project_id, invoke_id)
             else:
                 if hasattr(inst, 'on_flow_error'):
-                    packInfo = PackInfo(head)
-                    txt_projectid = to_str(projectid, 'cp936').strip('\x00')
-                    inst.onInvokeFlowError(
-                        packInfo, txt_projectid, invoke_id, ret)
+                    pack_info = PackInfo(head)
+                    txt_project_id = to_str(project_id, 'cp936').strip('\x00')
+                    inst.on_flow_error(pack_info, txt_project_id, invoke_id, ret)
 
     @classmethod
-    def _invoke_flow_ack_cb(cls, arg, local_clientid, head, projectid, invoke_id, ack, msg):
-        inst = cls._instances.get(local_clientid, None)
+    def _invoke_flow_ack_cb(cls, arg, local_client_id, head, project_id, invoke_id, ack, msg):
+        inst = cls._instances.get(local_client_id, None)
         if inst is not None:
             if hasattr(inst, 'on_flow_ack'):
-                packInfo = PackInfo(head)
-                txt_projectid = to_str(projectid, 'cp936').strip('\x00')
+                pack_info = PackInfo(head)
+                txt_project_id = to_str(project_id, 'cp936').strip('\x00')
                 txt_msg = to_str(msg, 'cp936').strip('\x00')
-                inst.onInvokeFlowAcknowledge(
-                    packInfo, txt_projectid, invoke_id, ack, txt_msg)
+                inst.on_flow_ack(pack_info, txt_project_id, invoke_id, ack, txt_msg)
 
     @classmethod
-    def _global_connect_cb(cls, arg, unitid, clientid, clienttype, accessunit, status, ext_info):
+    def _global_connect_cb(cls, arg, unit_id, client_id, client_type, access_unit, status, ext_info):
         if callable(cls._on_global_connect):
-            cls._on_global_connect(ord(unitid), ord(clientid), ord(clienttype), ord(
-                accessunit), ord(status), to_str(ext_info, 'cp936'))
+            cls._on_global_connect(
+                ord(unit_id), ord(client_id), ord(client_type), ord(access_unit), ord(status),
+                to_str(ext_info, 'cp936')
+            )
 
     @classmethod
     def _trace_cb(cls, msg):
-        cls.__logger.log(cls.__logging_option[1], to_str(msg, 'cp936'))
+        cls._logger.log(cls._logging_option[1], to_str(msg, 'cp936'))
 
     @classmethod
-    def _traceerr_cb(cls, msg):
-        cls.__logger.log(cls.__logging_option[2], to_str(msg, 'cp936'))
+    def _trace_err_cb(cls, msg):
+        cls._logger.log(cls._logging_option[2], to_str(msg, 'cp936'))
 
     @property
     def local_client_id(self):
@@ -445,10 +441,10 @@ class Client:
         :return: 当需要等待流程返回值时，该返回值是 :meth:`on_flow_resp` "流程返回事件"中对应的ID.
         :rtype: int
         """
-        c_server_unitid = c_int(server)
-        c_processindex = c_int(process)
+        c_server_unit_id = c_int(server)
+        c_process_index = c_int(process)
         c_project_id = c_char_p(to_bytes(project, 'cp936'))
-        c_flowid = c_char_p(to_bytes(flow, 'cp936'))
+        c_flow_id = c_char_p(to_bytes(flow, 'cp936'))
         c_invoke_mode = c_int(0) if is_resp else c_int(1)
         c_timeout = c_int(int(timeout * 1000))
         if parameters is None:
@@ -458,16 +454,16 @@ class Client:
                 parameters = [parameters]
             else:
                 parameters = list(parameters)
-        c_in_valuelist = c_char_p(to_bytes(str(parameters), 'cp936'))
+        c_in_value_list = c_char_p(to_bytes(str(parameters), 'cp936'))
         result = sbncif._c_fn_RemoteInvokeFlow(
             self._c_local_client_id,
-            c_server_unitid,
-            c_processindex,
+            c_server_unit_id,
+            c_process_index,
             c_project_id,
-            c_flowid,
+            c_flow_id,
             c_invoke_mode,
             c_timeout,
-            c_in_valuelist
+            c_in_value_list
         )
         if result < 0:
             errors.check_restval(result)

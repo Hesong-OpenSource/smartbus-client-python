@@ -55,7 +55,7 @@ def start_server(*args, **kwargs):
         print('connect error:', unitId, errno)
 
     def on_receive(packInfo, txt):
-        cli.sendText(9, 9, packInfo.srcUnitId, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
+        cli.sendText(9, 9, packInfo.src_unit_id, packInfo.srcUnitClientId, packInfo.dstUnitClientType, txt)
 
     def onInvokeFlowRespond(packInfo, project, invokeId, result):
         print('flow respond:', packInfo, project, invokeId, result)
@@ -71,7 +71,7 @@ def start_server(*args, **kwargs):
             print('onglobalconnect:', unitid, clientid, clienttype, status, ext_info)
 
     smartbus.ipcclient.Client.initialize(program_args.clientid, program_args.clienttype, onglobalconnect)
-    cli = smartbus.ipcclient.Client.instance(extInfo='我是 ipc_echoserver')
+    cli = smartbus.ipcclient.Client.instance(ext_info='我是 ipc_echoserver')
     assert (cli)
     cli.connect()
     cli.on_connect_success = on_connect_ok
@@ -128,8 +128,8 @@ USAGE
     try:
         # Setup argument parser
         parser = ArgumentParser(description=program_license, formatter_class=RawDescriptionHelpFormatter)
-        parser.add_argument("-i", "--client-id", dest="clientid", type=int, help="smartbus IPC client ID")
-        parser.add_argument("-t", "--client-type", dest="clienttype", type=int, default=-1,
+        parser.add_argument("-i", "--client-id", dest="client_id", type=int, help="smartbus IPC client ID")
+        parser.add_argument("-t", "--client-type", dest="client_type", type=int, default=-1,
                             help="smartbus IPC client ID type")
         parser.add_argument('-V', '--version', action='version', version=program_version_message)
 
