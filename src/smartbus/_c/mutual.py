@@ -1,22 +1,19 @@
-import platform
-import ctypes
-from ctypes import POINTER, Structure, c_void_p, c_int, c_char_p, c_byte, c_char, c_long, c_ushort
+# -*- coding: utf-8 -*-
 
-__all__ = ['PacketHeader', 'PPacketHeader',
-           'fntyp_connection_cb', 'fntyp_disconnect_cb', 'fntyp_recvdata_cb', 'fntyp_global_connect_cb',
-           'fntyp_invokeflow_ack_cb', 'fntyp_invokeflow_ret_cb',
-           'fntyp_unitdata_cb', 'fntyp_trace_str_cb'
-           ]
+"""
+Smartbus C-API IPC 与 NET 客户端的共用部分
+"""
+
+import ctypes
+import platform
 
 MAX_GLOBAL_SMART_NODE = 16
 #: 全局起始单元（节点）编号
-
 
 MIN_SMARTBUS_NETCLI_UNITID = 16
 #: 最小net客户端unitid值为16
 #:
 #: Net客户端的unitid不能小于16
-
 
 MAX_SMARTBUS_NETCLI_UNITID_NUM = 32
 #: net客户端值范围是16-47，全局最多32个。
@@ -146,40 +143,44 @@ CONNECTED_STATUS_CONNECTED = 6
 CONNECTED_STATUS_OK = 7
 
 
-class PacketHeader(Structure):
+class PacketHeader(ctypes.Structure):
+    """数据包头结构定义"""
     #: 设定为1字节对齐
     _pack_ = 1
     _fields_ = [
         #: 头标识    : 0x5b15
-        ('head_flag', c_ushort),
-        ('cmd', c_byte),
-        ('cmdtype', c_byte),
-        ('src_unit_client_type', c_char),
-        ('src_unit_id', c_char),
-        ('src_unit_client_id', c_char),
-        ('dest_unit_client_type', c_char),
-        ('dest_unit_id', c_char),
-        ('dest_unit_client_id', c_char),
-        ('reserved', c_char * 2),
-        ('packet_size', c_long),
-        ('datalen', c_long),
+        ('head_flag', ctypes.c_ushort),
+        ('cmd', ctypes.c_byte),
+        ('cmdtype', ctypes.c_byte),
+        ('src_unit_client_type', ctypes.c_char),
+        ('src_unit_id', ctypes.c_char),
+        ('src_unit_client_id', ctypes.c_char),
+        ('dest_unit_client_type', ctypes.c_char),
+        ('dest_unit_id', ctypes.c_char),
+        ('dest_unit_client_id', ctypes.c_char),
+        ('reserved', ctypes.c_char * 2),
+        ('packet_size', ctypes.c_long),
+        ('datalen', ctypes.c_long),
     ]
 
 
-PPacketHeader = POINTER(PacketHeader)
+#: 数据包头结构指针
+PPacketHeader = ctypes.POINTER(PacketHeader)
 
 #: Callback function call convert in the library
-CALLBACKFUNCTYPE = None
 if platform.system() == 'Windows':
     CALLBACKFUNCTYPE = ctypes.WINFUNCTYPE
 else:
     CALLBACKFUNCTYPE = ctypes.CFUNCTYPE
 
-fntyp_connection_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, c_int, c_int)
-fntyp_disconnect_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte)
-fntyp_recvdata_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, PPacketHeader, c_void_p, c_int)
-fntyp_global_connect_cb = CALLBACKFUNCTYPE(None, c_void_p, c_char, c_char, c_char, c_char, c_char, c_char_p)
-fntyp_invokeflow_ack_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, PPacketHeader, c_char_p, c_int, c_int, c_char_p)
-fntyp_invokeflow_ret_cb = CALLBACKFUNCTYPE(None, c_void_p, c_byte, PPacketHeader, c_char_p, c_int, c_int, c_char_p)
-fntyp_unitdata_cb = CALLBACKFUNCTYPE(None, c_byte, c_byte, c_void_p, c_int)
-fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, c_char_p)
+fntyp_connection_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, ctypes.c_int, ctypes.c_int)
+fntyp_disconnect_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte)
+fntyp_recvdata_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_void_p, ctypes.c_int)
+fntyp_global_connect_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_char, ctypes.c_char, ctypes.c_char,
+                                           ctypes.c_char, ctypes.c_char, ctypes.c_char_p)
+fntyp_invokeflow_ack_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_char_p,
+                                           ctypes.c_int, ctypes.c_int, ctypes.c_char_p)
+fntyp_invokeflow_ret_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_char_p,
+                                           ctypes.c_int, ctypes.c_int, ctypes.c_char_p)
+fntyp_unitdata_cb = CALLBACKFUNCTYPE(None, ctypes.c_byte, ctypes.c_byte, ctypes.c_void_p, ctypes.c_int)
+fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, ctypes.c_char_p)

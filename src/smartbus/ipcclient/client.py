@@ -271,7 +271,7 @@ class Client:
     def on_receive_text(self, pack_info, txt):
         """收到文本事件
 
-        :param smartbus.PackInfo pack_info: 数据包信息
+        :param smartbus.Head pack_info: 数据包信息
         :param str txt: 收到的文本
         """
         pass
@@ -281,7 +281,7 @@ class Client:
 
         在调用流程之后，通过该回调函数类型获知流程调用是否成功
 
-        :param smartbus.PackInfo pack_info: 数据包信息
+        :param smartbus.Head pack_info: 数据包信息
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         :param int ack: 流程调用是否成功。1表示成功，其它请参靠考误码
@@ -294,7 +294,7 @@ class Client:
 
         通过类类型的回调函数，获取被调用流程的“子项目结束”节点的返回值列表
 
-        :param smartbus.PackInfo pack_info: 数据包信息
+        :param smartbus.Head pack_info: 数据包信息
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         :param int result: 返回的数据。JSON数组格式
@@ -304,7 +304,7 @@ class Client:
     def on_flow_timeout(self, pack_info, project, invoke_id):
         """流程返回超时事件
 
-        :param smartbus.PackInfo pack_info: 数据包信息
+        :param smartbus.Head pack_info: 数据包信息
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         """
@@ -313,7 +313,7 @@ class Client:
     def on_flow_error(self, pack_info, project, invoke_id, error_code):
         """流程调用错误事件
 
-        :param smartbus.PackInfo pack_info: 数据包信息
+        :param smartbus.Head pack_info: 数据包信息
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         :param int error_code: 错误码

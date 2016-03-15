@@ -4,13 +4,33 @@
 Some helper functions
 """
 
+import sys
 import logging
 
-__all__ = ['to_bytes', 'to_str', 'to_unicode', 'LoggerMixin']
+__all__ = ['b2s', 'to_bytes', 'to_str', 'to_unicode', 'LoggerMixin']
 
 if bytes != str:  # Python 3
     #: Define text string data type, same as that in Python 2.x.
     unicode = str
+
+
+def b2s(b, from_coding=None, to_coding=None):
+    """bytes 字符串转为 str 字符串
+
+    :param bytes b: 待转换字节字符串
+    :param str from_coding: bytes 的编码格式，默认 `utf-8`
+    :param str to_coding: 转换结果字符串的编码格式，默认:func:`sys.getfilesystemencoding` 为准
+    :return: 转换结果字符串
+    :rtype: str
+    """
+    if b is None:
+        return b
+    from_coding = from_coding or 'utf-8'
+    to_coding = to_coding or sys.getfilesystemencoding()
+    if bytes == str:  # Python 2
+        return b.decode(from_coding).encode(to_coding)
+    else:  # Python 3
+        return b.decode(from_coding)
 
 
 def to_bytes(s, encoding='utf-8'):

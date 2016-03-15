@@ -323,7 +323,7 @@ class Client:
         """收到文本事件
 
         :param pack_info: 数据包信息
-        :type pack_info: smartbus.PackInfo
+        :type pack_info: smartbus.Head
         :param str txt: 收到的文本
         """
         pass
@@ -334,7 +334,7 @@ class Client:
         在调用流程之后，通过该回调函数类型获知流程调用是否成功
 
         :param pack_info: 数据包信息
-        :type pack_info: smartbus.PackInfo
+        :type pack_info: smartbus.Head
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         :param int ack: 流程调用是否成功。1表示成功，其它请参靠考误码
@@ -348,7 +348,7 @@ class Client:
         通过类类型的回调函数，获取被调用流程的“子项目结束”节点的返回值列表
 
         :param pack_info: 数据包信息
-        :type pack_info: smartbus.PackInfo
+        :type pack_info: smartbus.Head
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         :param int result: 返回的数据。JSON数组格式
@@ -359,7 +359,7 @@ class Client:
         """流程返回超时事件
 
         :param pack_info: 数据包信息
-        :type pack_info: smartbus.PackInfo
+        :type pack_info: smartbus.Head
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         """
@@ -369,7 +369,7 @@ class Client:
         """流程调用错误事件
 
         :param pack_info: 数据包信息
-        :type pack_info: smartbus.PackInfo
+        :type pack_info: smartbus.Head
         :param str project: 流程项目ID
         :param int invoke_id: 调用ID
         :param int error_code: 错误码
