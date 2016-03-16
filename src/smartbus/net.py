@@ -24,7 +24,7 @@ class Client(LoggerMixin):
 
     .. note:: 使用 :meth:`create` 建立实例，不要直接使用构造函数！
 
-    .. warning:: 由于 C-API 的设计问题，实例一旦建立，无法释放！
+    .. warning:: 实例一旦建立，无法释放！
     """
 
     _lib = None
