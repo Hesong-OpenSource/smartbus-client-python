@@ -1,33 +1,16 @@
 smartbus package
 ================
 
-Subpackages
------------
-
-.. toctree::
-
-    smartbus.ipcclient
-    smartbus.netclient
-
 Submodules
 ----------
 
-smartbus.errors module
-----------------------
+.. toctree::
 
-.. automodule:: smartbus.errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-smartbus.utils module
----------------------
-
-.. automodule:: smartbus.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
+   smartbus.errors
+   smartbus.head
+   smartbus.ipc
+   smartbus.net
+   smartbus.utils
 
 Module contents
 ---------------
