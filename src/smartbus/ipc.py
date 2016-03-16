@@ -251,17 +251,28 @@ class Client(LoggerMixin):
 
     @classmethod
     def get(cls):
-        """获取 Singleton 实例"""
+        """获取 Singleton 实例
+
+        :return: 存在的实例
+        :rtype: Client
+        """
         return Client._instance
 
     @classmethod
     def create(cls, *args, **kwargs):
-        """创建 Singleton 实例"""
+        """创建 Singleton 实例
+
+        :return: 新建的实例
+        :rtype: Client
+        """
         return cls(*args, **kwargs)
 
     @classmethod
     def get_or_create(cls, *args, **kwargs):
         """创建或者返回 Singleton 实例
+
+        :return: 存在的或者新建的实例
+        :rtype: Client
 
         * 如果实例存在，相当于 :meth:`get`
         * 如果实例不存在，相当于 :meth:`create`

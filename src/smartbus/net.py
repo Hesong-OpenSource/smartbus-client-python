@@ -78,6 +78,20 @@ class Client(LoggerMixin):
             默认值是 `None` : 将按照 :data:`DLL_NAME` 查找库文件，需确保库文件在 Python 运行时的搜索路径中。
 
         .. warning:: `unit_id >= 16` ，且全局唯一，不得重复
+
+        全局节点客户端连接、断开事件，当smartbus上某个节点发生连接或者断开时触发。
+        其函数形如：
+
+        .. function:: global_connect_callback(unit_id, client_id, client_type, access_unit_id, status_code, info)
+
+            :param int unit_id: 发生连接或断开事件的Smartbus节点单元ID
+            :param int client_id: 发生连接或断开事件的Smartbus节点单元中的客户端ID
+            :param int client_type: 发生连接或断开事件的Smartbus节点单元中的客户端类型
+            :param int access_unit_id: 连接点的UnitID
+            :param int status_code: 连接状态码： 0 断开连接、1 新建连接、2 已有的连接
+            :param str info: 连接附加信息
+
+
         """
         # Load DLL/SO
         logger = cls.get_logger()
@@ -540,19 +554,5 @@ class Client(LoggerMixin):
         :param str project_id: 流程项目ID
         :param int invoke_id: 流程调用ID
         :param int error_code: 错误码
-        """
-        pass
-
-    def on_global_connect_state_changed(self, unit_id, client_id, client_type, access_unit_id, status_code, info):
-        """全局节点客户端连接、断开事件
-
-        :param int unit_id: 发生连接或断开事件的Smartbus节点单元ID
-        :param int client_id: 发生连接或断开事件的Smartbus节点单元中的客户端ID
-        :param int client_type: 发生连接或断开事件的Smartbus节点单元中的客户端类型
-        :param int access_unit_id: 连接点的UnitID
-        :param int status_code: 连接状态码： 0 断开连接、1 新建连接、2 已有的连接
-        :param str info: 连接附加信息
-
-        当smartbus上某个节点发生连接或者断开时触发。
         """
         pass
