@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 
 """
-面向对象样式的 IPC 客户端 API 的 Python 封装
+面向对象样式的 NET 客户端 API 的 Python 封装
 """
 
 from __future__ import absolute_import
 
-from ctypes import CDLL, string_at, create_string_buffer, byref, c_void_p, c_char_p, c_int, c_byte, c_size_t
+from ctypes import CDLL, byref, create_string_buffer, string_at, c_void_p, c_char_p, c_int, c_byte, c_size_t
 from ctypes.util import find_library
 from concurrent.futures import ThreadPoolExecutor
 import json
 
-from ._c.ipc import *
+from ._c.net import *
 from .errors import check
 from .head import *
 from .utils import *
@@ -20,97 +20,109 @@ __all__ = ['Client']
 
 
 class Client(LoggerMixin):
-    """IPC 客户端
+    """NET 客户端
 
-    .. note:: 使用 :meth:`create` 或者 :meth:`get_or_create` 建立实例，不要直接使用构造函数！
+    .. note:: 使用 :meth:`create` 建立实例，不要直接使用构造函数！
+
+    .. warning:: 由于 C-API 的设计问题，实例一旦建立，无法释放！
     """
 
-    _instance = None  #: Singleton Client instance
+    _lib = None
+    _unit_id = None
+    _global_connect_callback = None
+    _instances = {}
 
-    def __init__(self, client_id, client_type, user=None, password=None, info=None, lib_path='', event_executor=None):
+    def __init__(self, client_id, client_type, master_ip, master_port, slave_ip=None, slave_port=None, user=None,
+                 password=None, info=None, event_executor=None):
         """
-        :param int client_id:
-        :param int client_type:
-        :param str user: 用户名
-        :param str password: 密码
-        :param str info: 附加信息
-        :param str lib_path: SO/DLL 文件路径名。
-            默认值是 `None` : 将按照 :data:`DLL_NAME` 查找库文件，需确保库文件在 Python 运行时的搜索路径中。
+        :param client_id: 本地 client id, >= 0 and <= 255
+        :param client_type: 本地 client type
+        :param master_ip: 主服务器IP地址
+        :param master_port: 主服务器端口
+        :param slave_ip: 从服务器IP地址。没有从地址的，填写0，或者""
+        :param slave_port: 从服务器端口。没有从端口的，填写0xFFFF
+        :param user: 用户名
+        :param password: 密码
+        :param info: 附加信息
         :param ThreadPoolExecutor event_executor: 事件执行器。在此执行器中回调事件执行函数。
             默认执行器的线程池数量是 `1`
-        :except SmartBusError: 如果建立连接的尝试失败
-
-        加载 `Smartbus IPC` 客户端 so/dll 到这个 Python 包, 并进行初始化。
         """
-        self.logger.info(
-            '__init__:  >>> '
-            'client_id=%s, client_type=%s, user=%s, password=%s, info=%s, lib_path=%s, event_executor=%s',
-            client_id, client_type, user, password, info, lib_path, event_executor
-        )
-        try:
-            # Load DLL/SO
-            if Client._instance:
-                raise RuntimeError('Client already constructed.')
-            if self._lib:
-                raise RuntimeError('Library already loaded')
+        if not self._lib:
+            raise RuntimeError('Library not been loaded')
+        if not (0 <= client_id <= 255):
+            raise ValueError('argument "local_client_id" must between 0 and 255')
+        if self._client_id in self._instances:
+            raise KeyError('Duplicated local client id "{}"'.format(self._client_id))
+        self._instances[self._client_id] = self
+        self._unit_id = self._unit_id
+        self._client_id = int(client_id)
+        self._client_type = client_type
+        self._master_ip = str(master_ip)
+        self._master_port = int(master_port)
+        self._slave_ip = slave_ip if slave_ip is None else str(slave_ip)
+        self._slave_port = int(slave_port or 0xffff)
+        self._user = user if user is None else str(user)
+        self._password = password if password is None else str(password)
+        self._info = info if info is None else str(info)
+        if not event_executor:
+            event_executor = ThreadPoolExecutor(max_workers=1)
+        self._event_executor = event_executor
+
+    @classmethod
+    def initialize(cls, unit_id, global_connect_callback=None, lib_path=''):
+        """初始化
+
+        :param int unit_id: 在连接到 `Smartbus` 后，本节点的单元ID。
+        :param callable global_connect_callback: 全局连接事件回调函数
+        :param str lib_path: SO/DLL 文件路径名。
+            默认值是 `None` : 将按照 :data:`DLL_NAME` 查找库文件，需确保库文件在 Python 运行时的搜索路径中。
+
+        .. warning:: `unit_id >= 16` ，且全局唯一，不得重复
+        """
+        # Load DLL/SO
+        logger = cls.get_logger()
+        logger.info('initialize: >>> lib_path=%s', lib_path)
+        if cls._lib:
+            raise RuntimeError('Library already loaded')
+        if not lib_path:
+            logger.debug('initialize: find_library "%s"', DLL_NAME)
+            lib_path = find_library(DLL_NAME)
             if not lib_path:
-                self.logger.debug('__init__: find_library "%s"', DLL_NAME)
-                lib_path = find_library(DLL_NAME)
-                if not lib_path:
-                    raise RuntimeError('Failed to find library {}'.format(DLL_NAME))
-            self.logger.debug('__init__: CDLL %s', lib_path)
-            self._lib = CDLL(lib_path)
-            if not self._lib:
-                raise RuntimeError('Failed to load library {}'.format(lib_path))
-            self.logger.debug('__init__: %s', self._lib)
-            # Bind C API function to static API Class
-            for func_cls in get_function_declarations():
-                self.logger.debug('__init__: bind function %s', func_cls)
-                func_cls.bind(self._lib)
-            # C API: init
-            self.logger.debug('__init__: Init')
-            ret = Init.c_func(c_int(client_type), c_int(client_id))
-            check(ret)
-            self._client_id = client_id
-            self._client_type = client_type
-            # C API: SetCallBackFn
-            self.logger.debug('__init__: SetCallBackFn')
-            SetCallBackFn.c_func(
-                fntyp_connection_cb(self._cb_cnx),
-                fntyp_recvdata_cb(self._cb_rcv),
-                fntyp_disconnect_cb(self._cb_dnx),
-                fntyp_invokeflow_ret_cb(self._cb_flow_ret),
-                fntyp_global_connect_cb(self._cb_g_cnx),
-                None
-            )
-            # C API: SetCallBackFnEx
-            self.logger.debug('__init__: SetTraceStr')
-            SetTraceStr.c_func(
-                fntyp_trace_str_cb(self._cb_trace),
-                fntyp_trace_str_cb(self._cb_trace_err)
-            )
-            # C API: SetCallBackFnEx
-            self.logger.debug('__init__: SetCallBackFnEx')
-            SetCallBackFnEx.c_func(c_char_p(b'smartbus_invokeflow_ack_cb'), fntyp_invokeflow_ack_cb(self._cb_flow_ack))
-            # Load and init OK!!!
-            # Other field
-            self._unit_id = None
-            self._user = user if user is None else str(user)
-            self._password = password if password is None else str(password)
-            self._info = info if info is None else str(info)
-            if not event_executor:
-                event_executor = ThreadPoolExecutor(max_workers=1)
-            self._event_executor = event_executor
-        except:
-            self.logger.exception('')
-            raise
-        finally:
-            self.logger.info('__init__: <<<')
+                raise RuntimeError('Failed to find library {}'.format(DLL_NAME))
+        logger.debug('initialize: CDLL %s', lib_path)
+        cls._lib = CDLL(lib_path)
+        if not cls._lib:
+            raise RuntimeError('Failed to load library {}'.format(lib_path))
+        logger.debug('initialize: %s', cls._lib)
+        # Bind C API function to static API Class
+        for func_cls in get_function_declarations():
+            logger.debug('initialize: bind function %s', func_cls)
+            func_cls.bind(cls._lib)
+        # C API: init
+        logger.debug('initialize: Init')
+        ret = Init.c_func(c_int(unit_id))
+        check(ret)
+        cls._unit_id = unit_id
+        # C API: SetCallBackFn
+        logger.debug('initialize: SetCallBackFn')
+        SetCallBackFn.c_func(
+            fntyp_connection_cb(cls._cb_cnx),
+            fntyp_recvdata_cb(cls._cb_rcv),
+            fntyp_disconnect_cb(cls._cb_dnx),
+            fntyp_invokeflow_ret_cb(cls._cb_flow_ret),
+            fntyp_global_connect_cb(cls._cb_g_cnx),
+            None
+        )
+        # C API: SetCallBackFnEx
+        logger.debug('initialize: SetCallBackFnEx')
+        SetCallBackFnEx.c_func(c_char_p(b'smartbus_invokeflow_ack_cb'), fntyp_invokeflow_ack_cb(cls._cb_flow_ack))
+        # others
+        cls._global_connect_callback = global_connect_callback
+        # Load and init OK!!!
+        logger.info('initialize: <<<')
 
-    def __del__(self):
-        self.dispose()
-
-    def _cb_cnx(self, arg, local_client_id, access_point_unit_id, ack):
+    @classmethod
+    def _cb_cnx(cls, arg, local_client_id, access_point_unit_id, ack):
         """客户端连接成功回调函数类型
 
         :param c_void_p arg: 自定义数据
@@ -118,19 +130,17 @@ class Client(LoggerMixin):
         :param c_int access_point_unit_id: int 连接点的 UnitID
         :param c_int ack: int 连接注册结果： 0 建立连接成功、< 0 连接失败
         """
-        self.logger.debug('_cb_cnx: arg=%s, local_client_id=%s, access_point_unit_id=%s, ack=%s',
-                          arg, local_client_id, access_point_unit_id, ack)
-        if ack.value == 0:
-            # 连接成功
-            self._client_id = local_client_id.value
-            self._unit_id = access_point_unit_id.value
-            self._event_executor.submit(self.on_connect)
-        else:
-            # 连接失败
-            self._client_id = local_client_id.value
-            self._event_executor.submit(self.on_connect_fail, ack.value)
+        cls.get_logger().debug('_cb_cnx: arg=%s, local_client_id=%s, access_point_unit_id=%s, ack=%s',
+                               arg, local_client_id, access_point_unit_id, ack)
+        inst = cls.find(local_client_id.value)
+        if inst:
+            if ack.value == 0:  # 建立连接成功
+                inst._event_executor.submit(inst.on_connect)
+            else:  # 连接失败
+                inst._event_executor.submit(inst.on_connect_fail, ack.value)
 
-    def _cb_rcv(self, param, local_client_id, head, data, size):
+    @classmethod
+    def _cb_rcv(cls, param, local_client_id, head, data, size):
         """接收数据回调函数类型
 
         :param c_void_p param: 自定义数据
@@ -139,47 +149,56 @@ class Client(LoggerMixin):
         :param c_void_p data: 数据包体
         :param c_size_t size: 包体字节长度
         """
-        self.logger.debug('_cb_rcv: param=%s, local_client_id=%s, head=%s, data=%s, size=%s',
-                          param, local_client_id, head, data, size)
-        self._event_executor.submit(self.on_data, Head(head), string_at(data, size.value) if data else None)
+        cls.get_logger().debug('_cb_rcv: param=%s, local_client_id=%s, head=%s, data=%s, size=%s',
+                               param, local_client_id, head, data, size)
+        inst = cls.find(local_client_id.value)
+        if inst:
+            inst._event_executor.submit(inst.on_data, Head(head), string_at(data, size.value) if data else None)
 
-    def _cb_dnx(self, param, local_client_id):
+    @classmethod
+    def _cb_dnx(cls, param, local_client_id):
         """客户端连接断开回调函数类型
 
         :param c_void_p param: 自定义数据
         :param c_byte local_client_id: 连接断开的本地 ClientId
         """
-        self.logger.debug('_cb_dnx: param=%s, local_client_id=%s',
-                          param, local_client_id)
-        self._client_id = local_client_id.value
-        self._event_executor.submit(self.on_disconnect)
+        cls.get_logger().debug('_cb_dnx: param=%s, local_client_id=%s',
+                               param, local_client_id)
+        inst = cls.find(local_client_id.value)
+        if inst:
+            inst._event_executor.submit(inst.on_disconnect)
 
-    def _cb_flow_ack(self, arg, local_client_id, head, project_id, invoke_id, ack, msg):
+    @classmethod
+    def _cb_flow_ack(cls, arg, local_client_id, head, project_id, invoke_id, ack, msg):
         """调用流程是否成功回调函数类型
 
         :param c_void_p arg: 自定义数据
         :param c_byte local_client_id: 本地 ClientId
         :param PPacketHeader head: 消息头
-        :param c_char_p project_id: projectid
+        :param c_char_p project_id: project id
         :param c_int invoke_id: 调用ID
         :param c_int ack: 流程调用是否成功。1表示成功，其它请参靠考误码
         :param c_char_p msg: 调用失败时的信息描述
 
         在调用流程之后，通过该回调函数类型获知流程调用是否成功
         """
-        self.logger.debug(
+        cls.get_logger().debug(
             '_cb_flow_ack: arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ack=%s, msg=%s',
             arg, local_client_id, head, project_id, invoke_id, ack, msg)
-        self._event_executor.submit(
-            self.on_flow_ack,
-            Head(head),
-            to_str(string_at(project_id).strip(b'\x00')).strip(),
-            invoke_id.value,
-            ack.value,
-            to_str(string_at(msg).strip(b'\x00')).strip() if msg else ''
-        )
+        h = Head(head)
+        inst = cls.find(h.dst_unit_client_id)
+        if inst:
+            inst._event_executor.submit(
+                inst.on_flow_ack,
+                h,
+                b2s_recode(string_at(project_id).strip(b'\x00'), 'cp936', 'utf-8').strip(),
+                invoke_id.value,
+                ack.value,
+                b2s_recode(string_at(msg).strip(b'\x00'), 'cp936', 'utf-8').strip() if msg else ''
+            )
 
-    def _cb_flow_ret(self, arg, local_client_id, head, project_id, invoke_id, ret, param):
+    @classmethod
+    def _cb_flow_ret(cls, arg, local_client_id, head, project_id, invoke_id, ret, param):
         """调用流程结果返回回调函数类型
 
         :param c_void_p arg: 自定义数据
@@ -192,26 +211,30 @@ class Client(LoggerMixin):
 
         通过类类型的回调函数，获取被调用流程的“子项目结束”节点的返回值列表
         """
-        self.logger.debug(
+        cls.get_logger().debug(
             '_cb_flow_ret: arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ret=%s, param=%s',
             arg, local_client_id, head, project_id, invoke_id, ret, param)
-        _head = Head(head)
-        _project_id = to_str(string_at(project_id).strip(b'\x00')).strip()
-        _invoke_id = invoke_id.value
-        _status_code = ret.value
-        if _status_code == 1:
-            py_params = []
-            if param:
-                _params = b2s_recode(string_at(param).strip(b'\x00'), 'cp936', 'utf-8').strip()
-                if _params:
-                    py_params = json.loads(_params)
-            self._event_executor.submit(self.on_flow_resp, _head, _project_id, _invoke_id, py_params)
-        elif _status_code == SMARTBUS_ERR_TIMEOUT:
-            self._event_executor.submit(self.on_flow_timeout, _head, _project_id, _invoke_id)
-        else:
-            self._event_executor.submit(self.on_flow_error, _head, _project_id, _invoke_id, _status_code)
 
-    def _cb_g_cnx(self, arg, unit_id, client_id, client_type, access_unit, status, add_info):
+        _head = Head(head)
+        inst = cls.find(_head.dst_unit_client_id)
+        if inst:
+            _project_id = to_str(string_at(project_id).strip(b'\x00')).strip()
+            _invoke_id = invoke_id.value
+            _status_code = ret.value
+            if _status_code == 1:
+                py_params = []
+                if param:
+                    _params = b2s_recode(string_at(param).strip(b'\x00'), 'cp936', 'utf-8').strip()
+                    if _params:
+                        py_params = json.loads(_params)
+                inst._event_executor.submit(inst.on_flow_resp, _head, _project_id, _invoke_id, py_params)
+            elif _status_code == SMARTBUS_ERR_TIMEOUT:
+                inst._event_executor.submit(inst.on_flow_timeout, _head, _project_id, _invoke_id)
+            else:
+                inst._event_executor.submit(inst.on_flow_error, _head, _project_id, _invoke_id, _status_code)
+
+    @classmethod
+    def _cb_g_cnx(cls, arg, unit_id, client_id, client_type, access_unit, status, add_info):
         """全局节点客户端连接、断开通知回调函数类型
 
         :param c_void_p arg: 自定义数据
@@ -224,53 +247,55 @@ class Client(LoggerMixin):
 
         当smartbus上某个节点发生连接或者断开时，该类型回调函数被调用。
         """
-        self.logger.debug(
+        cls.get_logger().debug(
             '_cb_g_cnx: arg=%s, unit_id=%s, client_id=%s, client_type=%s, access_unit=%s, status=%s, add_info=%s',
             arg, unit_id, client_id, client_type, access_unit, status, add_info)
-        self._event_executor.submit(
-            self.on_global_connect_state_changed,
-            unit_id.value,
-            client_id.value,
-            client_type.value,
-            access_unit.value,
-            status.value,
-            to_str(string_at(add_info)) if add_info else ''
-        )
-
-    def _cb_trace(self, msg):
-        """
-        :param c_char_p msg:
-        """
-        self.logger.info(to_str(string_at(msg))) if msg else ''
-
-    def _cb_trace_err(self, msg):
-        """
-        :param c_char_p msg:
-        """
-        self.logger.error(to_str(string_at(msg))) if msg else ''
+        if callable(cls._global_connect_callback):
+            cls._global_connect_callback(
+                unit_id.value,
+                client_id.value,
+                client_type.value,
+                access_unit.value,
+                status.value,
+                to_str(string_at(add_info)) if add_info else ''
+            )
 
     @classmethod
-    def get(cls):
-        """获取 Singleton 实例"""
-        return Client._instance
+    def _cb_trace(cls, msg):
+        """
+        :param c_char_p msg:
+        """
+        cls.get_logger().info(to_str(string_at(msg))) if msg else ''
+
+    @classmethod
+    def _cb_trace_err(cls, msg):
+        """
+        :param c_char_p msg:
+        """
+        cls.get_logger().error(to_str(string_at(msg))) if msg else ''
 
     @classmethod
     def create(cls, *args, **kwargs):
-        """创建 Singleton 实例"""
+        """建立实例
+
+        参数见构造函数
+        """
         return cls(*args, **kwargs)
 
     @classmethod
-    def get_or_create(cls, *args, **kwargs):
-        """创建或者返回 Singleton 实例
+    def find(cls, client_id, default=None):
+        """查找并返回实例
 
-        * 如果实例存在，相当于 :meth:`get`
-        * 如果实例不存在，相当于 :meth:`create`
+        :param client_id: 要查找的实例的 :attr:`client_id`
+        :param default: 如果找不到，返回这个值
+        :return: 找到的实例
+        :rtype: Client
         """
-        return Client._instance if Client._instance else cls.create(*args, **kwargs)
+        return cls._instances.get(client_id, default)
 
-    @classmethod
-    def destroy(cls):
-        Client._instance.dispose()
+    @property
+    def unit_id(self):
+        return self._unit_id
 
     @property
     def client_id(self):
@@ -279,6 +304,22 @@ class Client(LoggerMixin):
     @property
     def client_type(self):
         return self._client_type
+
+    @property
+    def master_ip(self):
+        return self._master_ip
+
+    @property
+    def master_port(self):
+        return self._master_port
+
+    @property
+    def slave_ip(self):
+        return self._slave_ip
+
+    @property
+    def slave_port(self):
+        return self._slave_port
 
     @property
     def user(self):
@@ -292,14 +333,6 @@ class Client(LoggerMixin):
     def info(self):
         return self._info
 
-    def dispose(self):
-        """**必须** 调用该方法方可释放"""
-        self.logger.warning('dispose')
-        if self._lib:
-            self._lib.Release.c_func()
-            self._lib = None
-        Client._instance = None
-
     def activate(self):
         """激活客户端
 
@@ -309,11 +342,16 @@ class Client(LoggerMixin):
             该函数立即返回，无论连接成功与否。
             如该函数没有直接返回失败，客户端会自动尝试连接 `smartbus` 服务器，并在连接断开/失败时自动尝试重连
         """
-        self.logger.info('connect')
+        self.logger.info('<%s> connect', self._client_id)
         error_code = CreateConnect.c_func(
-            to_bytes(self._user) if self._user else None,
-            to_bytes(self._password) if self._password else None,
-            to_bytes(self._info) if self._info else None
+            c_byte(self._client_id),
+            c_byte(self._client_type),
+            c_char_p(to_bytes(self._master_ip)) if self._master_ip else None,
+            c_ushort(self._master_port),
+            c_char_p(to_bytes(self._slave_ip)) if self._slave_ip else None,
+            c_ushort(self._slave_port),
+            c_char_p(to_bytes(self._user)) if self._user else None,
+            c_char_p(to_bytes(self._password)) if self._password else None
         )
         check(error_code)
 
@@ -334,6 +372,7 @@ class Client(LoggerMixin):
         length = len(data) if data else 0
         buff = create_string_buffer(data, length) if data else None
         error_code = SendData.c_func(
+            c_byte(self._client_id),
             c_byte(cmd),
             c_byte(cmd_type),
             c_int(dst_unit_id),
@@ -359,6 +398,7 @@ class Client(LoggerMixin):
         buff = create_string_buffer(to_bytes(data)) if data else None
         size = len(buff) if data else 0
         error_code = SendPing.c_func(
+            c_byte(self._client_id),
             c_int(dst_unit_id),
             c_int(dst_client_id),
             c_int(dst_client_type),
@@ -386,6 +426,7 @@ class Client(LoggerMixin):
             server_unit_id, process_index, project_id, title, mode, expires, txt
         )
         result = SendNotify.c_func(
+            c_byte(self._client_id),
             c_int(server_unit_id),
             c_int(process_index),
             c_char_p(to_bytes(project_id)),
@@ -428,6 +469,7 @@ class Client(LoggerMixin):
                 params = list(params)
         value_string_list = c_char_p(to_bytes(str(params)))
         result = RemoteInvokeFlow.c_func(
+            c_byte(self._client_id),
             c_int(server_unit_id),
             c_int(process_index),
             c_char_p(to_bytes(project_id)),

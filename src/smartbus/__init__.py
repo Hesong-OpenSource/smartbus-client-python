@@ -10,7 +10,9 @@
 
 from __future__ import absolute_import
 
-from . import ipcclient
-from . import netclient
+from .ipc import Client as IpcClient
+from .net import Client as NetClient
 
-version = '1.7.0'
+__all__ = ['IpcClient', 'NetClient']
+
+__version__ = '2.0.0'

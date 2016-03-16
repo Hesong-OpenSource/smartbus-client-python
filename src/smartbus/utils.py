@@ -7,30 +7,48 @@ Some helper functions
 import sys
 import logging
 
-__all__ = ['b2s', 'to_bytes', 'to_str', 'to_unicode', 'LoggerMixin']
+__all__ = ['b2s_recode', 's2b_recode', 'to_bytes', 'to_str', 'to_unicode', 'LoggerMixin']
 
 if bytes != str:  # Python 3
     #: Define text string data type, same as that in Python 2.x.
     unicode = str
 
 
-def b2s(b, from_coding=None, to_coding=None):
-    """bytes 字符串转为 str 字符串
+def b2s_recode(bs, source_encoding=None, target_encoding=None):
+    """将 :class:`bytes` 字符串重编码为 :class:`str` 字符串
 
-    :param bytes b: 待转换字节字符串
-    :param str from_coding: bytes 的编码格式，默认 `utf-8`
-    :param str to_coding: 转换结果字符串的编码格式，默认:func:`sys.getfilesystemencoding` 为准
+    :param bytes bs: 待转换字节字符串
+    :param str source_encoding: bytes 的编码格式。
+        默认 `utf-8`。
+    :param str target_encoding: 转换结果字符串的编码格式。
+        仅 Python2 环境下有效。
     :return: 转换结果字符串
     :rtype: str
     """
-    if b is None:
-        return b
-    from_coding = from_coding or 'utf-8'
-    to_coding = to_coding or sys.getfilesystemencoding()
+    if bs is None:
+        return bs
     if bytes == str:  # Python 2
-        return b.decode(from_coding).encode(to_coding)
+        return bs.decode(source_encoding).encode(target_encoding)
     else:  # Python 3
-        return b.decode(from_coding)
+        return bs.decode(source_encoding)
+
+
+def s2b_recode(s, source_encoding=None, target_encoding=None):
+    """将 :class:`str` 字符串重编码为 :class:`bytes` 字符串
+
+    :param str s: 待转换字节字符串
+    :param str source_encoding: bytes 的编码格式。
+        仅 Python2 环境下有效。
+    :param str target_encoding: 转换结果字符串的编码格式。
+    :return: 转换结果字符串
+    :rtype: bytes
+    """
+    if s is None:
+        return s
+    if bytes == str:  # Python 2
+        return s.decode(source_encoding).encode(target_encoding)
+    else:  # Python 3
+        return s.encode(target_encoding)
 
 
 def to_bytes(s, encoding='utf-8'):
