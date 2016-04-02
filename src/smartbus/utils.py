@@ -65,10 +65,14 @@ def to_bytes(s, encoding='utf-8'):
     * In Python 3, convert `s` to `bytes` if it's `unicode` or `str`.
     * In Python 3, return original `s` if it's neither `unicode` nor `str`.
     """
-    if isinstance(s, unicode):
+    if s is None:
+        return s
+    elif isinstance(s, bytes):
+        return s
+    elif isinstance(s, unicode):
         return s.encode(encoding)
     else:
-        return s
+        raise TypeError('Type of argument "s" is neither "str" nor "bytes".')
 
 
 def to_str(s, encoding='utf-8'):
@@ -106,10 +110,14 @@ def to_unicode(s, encoding='utf-8'):
     * In Python 3, return original `s` if it's not `bytes`.
     * In Python 3, it equals to :func:`to_str`.
     """
-    if isinstance(s, bytes):
-        return s.decode(encoding)
-    else:
+    if s is None:
         return s
+    elif isinstance(s, bytes):
+        return s.decode(encoding)
+    elif isinstance(s, unicode):
+        return s
+    else:
+        raise TypeError('Type of argument "s" is neither "str" nor "bytes".')
 
 
 class LoggerMixin:

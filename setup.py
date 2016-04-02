@@ -25,6 +25,10 @@ setup(
     description='Python wrapper for Hesong(GuangZhou)\'s IPSC-Smartbus client',
     long_description=long_description,
 
+    # You can just specify the packages manually here if your project is
+    # simple. Or you can use find_packages().
+    packages=find_packages('src', exclude=['tests']),
+    package_dir={'': 'src'},  # tell distutils packages are under src
     # The project's main homepage.
     url='https://github.com/Hesong-OpenSource/smartbus-client-python',
 
@@ -34,6 +38,13 @@ setup(
 
     # Choose your license
     license='MIT',
+
+    # What does your project relate to?
+    keywords='hesong ipsc smartbus',
+
+    extras_require={
+        ':python_version<"3.2"': ['futures'],
+    },
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -61,13 +72,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-
-    # What does your project relate to?
-    keywords='hesong ipsc smartbus',
-
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-    packages=find_packages('src', exclude=['tests']),
 
     # List run-time dependencies here.  These will be installed by pip when your
     # project is installed. For an analysis of "install_requires" vs pip's

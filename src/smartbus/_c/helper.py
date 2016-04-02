@@ -5,17 +5,13 @@ __all__ = ['CFunc', 'declare', 'IpcFunc', 'NetFunc']
 
 
 def declare(funcs):
-    """decoration for :class:`CFunc`
+    """Decoration for :class:`CFunc`
 
     :param list funcs: The to-be-bind functions list
 
     Add the decorated :class:`CFunc` class into to-be-bind functions list
     """
-
-    def adder(obj):
-        funcs.append(obj)
-
-    return adder
+    return lambda x: funcs.append(x)
 
 
 class CFunc:

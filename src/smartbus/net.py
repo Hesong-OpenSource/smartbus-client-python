@@ -144,8 +144,11 @@ class Client(LoggerMixin):
         :param c_int access_point_unit_id: int 连接点的 UnitID
         :param c_int ack: int 连接注册结果： 0 建立连接成功、< 0 连接失败
         """
-        cls.get_logger().debug('_cb_cnx: arg=%s, local_client_id=%s, access_point_unit_id=%s, ack=%s',
-                               arg, local_client_id, access_point_unit_id, ack)
+        cls.get_logger().debug(
+            'connect: '
+            'arg=%s, local_client_id=%s, access_point_unit_id=%s, ack=%s',
+            arg, local_client_id, access_point_unit_id, ack
+        )
         inst = cls.find(local_client_id.value)
         if inst:
             if ack.value == 0:  # 建立连接成功
@@ -163,8 +166,11 @@ class Client(LoggerMixin):
         :param c_void_p data: 数据包体
         :param c_size_t size: 包体字节长度
         """
-        cls.get_logger().debug('_cb_rcv: param=%s, local_client_id=%s, head=%s, data=%s, size=%s',
-                               param, local_client_id, head, data, size)
+        cls.get_logger().debug(
+            'receive-data: '
+            'param=%s, local_client_id=%s, head=%s, data=%s, size=%s',
+            param, local_client_id, head, data, size
+        )
         inst = cls.find(local_client_id.value)
         if inst:
             inst._event_executor.submit(inst.on_data, Head(head), string_at(data, size.value) if data else None)
@@ -176,8 +182,11 @@ class Client(LoggerMixin):
         :param c_void_p param: 自定义数据
         :param c_byte local_client_id: 连接断开的本地 ClientId
         """
-        cls.get_logger().debug('_cb_dnx: param=%s, local_client_id=%s',
-                               param, local_client_id)
+        cls.get_logger().debug(
+            'disconnect: '
+            'param=%s, local_client_id=%s',
+            param, local_client_id
+        )
         inst = cls.find(local_client_id.value)
         if inst:
             inst._event_executor.submit(inst.on_disconnect)
@@ -197,8 +206,10 @@ class Client(LoggerMixin):
         在调用流程之后，通过该回调函数类型获知流程调用是否成功
         """
         cls.get_logger().debug(
-            '_cb_flow_ack: arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ack=%s, msg=%s',
-            arg, local_client_id, head, project_id, invoke_id, ack, msg)
+            'flow-ack: '
+            'arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ack=%s, msg=%s',
+            arg, local_client_id, head, project_id, invoke_id, ack, msg
+        )
         h = Head(head)
         inst = cls.find(h.dst_unit_client_id)
         if inst:
@@ -226,9 +237,10 @@ class Client(LoggerMixin):
         通过类类型的回调函数，获取被调用流程的“子项目结束”节点的返回值列表
         """
         cls.get_logger().debug(
-            '_cb_flow_ret: arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ret=%s, param=%s',
-            arg, local_client_id, head, project_id, invoke_id, ret, param)
-
+            'flow-ret: '
+            'arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ret=%s, param=%s',
+            arg, local_client_id, head, project_id, invoke_id, ret, param
+        )
         _head = Head(head)
         inst = cls.find(_head.dst_unit_client_id)
         if inst:
@@ -262,8 +274,10 @@ class Client(LoggerMixin):
         当smartbus上某个节点发生连接或者断开时，该类型回调函数被调用。
         """
         cls.get_logger().debug(
-            '_cb_g_cnx: arg=%s, unit_id=%s, client_id=%s, client_type=%s, access_unit=%s, status=%s, add_info=%s',
-            arg, unit_id, client_id, client_type, access_unit, status, add_info)
+            'global-connection: '
+            'arg=%s, unit_id=%s, client_id=%s, client_type=%s, access_unit=%s, status=%s, add_info=%s',
+            arg, unit_id, client_id, client_type, access_unit, status, add_info
+        )
         if callable(cls._global_connect_callback):
             cls._global_connect_callback(
                 unit_id.value,
@@ -380,7 +394,8 @@ class Client(LoggerMixin):
         :param bytes data: 待发送数据，类型必须是 :class:`bytes`
         """
         self.logger.debug(
-            'send_data: cmd=%s, cmd_type=%s, dst_unit_id=%s, dst_client_id=%s, dst_client_type=%s, data=%s',
+            'send_data: '
+            'cmd=%s, cmd_type=%s, dst_unit_id=%s, dst_client_id=%s, dst_client_type=%s, data=%s',
             cmd, cmd_type, dst_unit_id, dst_client_id, dst_client_type, data
         )
         length = len(data) if data else 0
@@ -403,21 +418,22 @@ class Client(LoggerMixin):
         :param int dst_unit_id: 目标的smartbus单元ID
         :param int dst_client_id: 目标的smartbus客户端ID
         :param int dst_client_type: 目标的smartbus客户端类型
-        :param bytes data: 要发送的二进制数据
+        :param bytes data: 待发送数据，类型必须是 :class:`bytes`
         """
         self.logger.debug(
-            'ping: dst_unit_id=%s, dst_client_id=%s, dst_client_type=%s, data=%s',
+            'ping: '
+            'dst_unit_id=%s, dst_client_id=%s, dst_client_type=%s, data=%s',
             dst_unit_id, dst_client_id, dst_client_type, data
         )
-        buff = create_string_buffer(to_bytes(data)) if data else None
-        size = len(buff) if data else 0
+        length = len(data) if data else 0
+        buff = create_string_buffer(data, length) if data else None
         error_code = SendPing.c_func(
             c_byte(self._client_id),
             c_int(dst_unit_id),
             c_int(dst_client_id),
             c_int(dst_client_type),
             byref(buff),
-            c_int(size)
+            c_int(length)
         )
         check(error_code)
 
@@ -436,7 +452,8 @@ class Client(LoggerMixin):
         :except:                   API返回错误
         """
         self.logger.debug(
-            'notify: server_unit_id=%s, process_index=%s, project_id=%s, title=%s, mode=%s, expires=%s, txt=%s',
+            'notify: '
+            'server_unit_id=%s, process_index=%s, project_id=%s, title=%s, mode=%s, expires=%s, txt=%s',
             server_unit_id, process_index, project_id, title, mode, expires, txt
         )
         result = SendNotify.c_func(
@@ -470,17 +487,10 @@ class Client(LoggerMixin):
         :rtype: int
         """
         self.logger.debug(
-            'launch_flow: '
+            'launch-flow: '
             'server_unit_id=%s, process_index=%s, project_id=%s, flow_id=%s, mode=%s, timeout=%s, params=%s',
             server_unit_id, process_index, project_id, flow_id, mode, timeout, params
         )
-        if params is None:
-            params = []
-        else:
-            if isinstance(params, (int, float, str, bool, dict)):
-                params = [params]
-            else:
-                params = list(params)
         value_string_list = c_char_p(to_bytes(str(params)))
         result = RemoteInvokeFlow.c_func(
             c_byte(self._client_id),
