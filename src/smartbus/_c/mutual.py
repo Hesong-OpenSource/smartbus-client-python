@@ -173,14 +173,24 @@ if platform.system() == 'Windows':
 else:
     CALLBACKFUNCTYPE = ctypes.CFUNCTYPE
 
-fntyp_connection_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, ctypes.c_int, ctypes.c_int)
+fntyp_connection_cb = CALLBACKFUNCTYPE(
+    None, ctypes.c_void_p, ctypes.c_byte, ctypes.c_int, ctypes.c_int)
+
 fntyp_disconnect_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte)
-fntyp_recvdata_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_void_p, ctypes.c_int)
+
+fntyp_recvdata_cb = CALLBACKFUNCTYPE(
+    None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_void_p, ctypes.c_int)
+
 fntyp_global_connect_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_char, ctypes.c_char, ctypes.c_char,
                                            ctypes.c_char, ctypes.c_char, ctypes.c_char_p)
+
 fntyp_invokeflow_ack_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_char_p,
                                            ctypes.c_int, ctypes.c_int, ctypes.c_char_p)
+
 fntyp_invokeflow_ret_cb = CALLBACKFUNCTYPE(None, ctypes.c_void_p, ctypes.c_byte, PPacketHeader, ctypes.c_char_p,
                                            ctypes.c_int, ctypes.c_int, ctypes.c_char_p)
-fntyp_unitdata_cb = CALLBACKFUNCTYPE(None, ctypes.c_byte, ctypes.c_byte, ctypes.c_void_p, ctypes.c_int)
+
+fntyp_unitdata_cb = CALLBACKFUNCTYPE(
+    None, ctypes.c_byte, ctypes.c_byte, ctypes.c_void_p, ctypes.c_int)
+
 fntyp_trace_str_cb = CALLBACKFUNCTYPE(None, ctypes.c_char_p)

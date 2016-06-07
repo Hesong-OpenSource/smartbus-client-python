@@ -29,33 +29,34 @@ class Client(LoggerMixin):
 
     _lib = None
     _unit_id = None
-    _global_connect_callback = None
     _instances = {}
+    _c_cbs = {}
+    _global_connect_callback = None
 
     def __init__(self, client_id, client_type, master_ip, master_port, slave_ip=None, slave_port=None, user=None,
                  password=None, info=None, event_executor=None):
         """
-        :param client_id: 本地 client id, >= 0 and <= 255
-        :param client_type: 本地 client type
-        :param master_ip: 主服务器IP地址
-        :param master_port: 主服务器端口
-        :param slave_ip: 从服务器IP地址。没有从地址的，填写0，或者""
-        :param slave_port: 从服务器端口。没有从端口的，填写0xFFFF
-        :param user: 用户名
-        :param password: 密码
-        :param info: 附加信息
-        :param ThreadPoolExecutor event_executor: 事件执行器。在此执行器中回调事件执行函数。
-            默认执行器的线程池数量是 `1`
+        :param int client_id: 本地 client id, >= 0 and <= 255
+        :param int client_type: 本地 client type
+        :param str master_ip: 主服务器IP地址
+        :param int master_port: 主服务器端口
+        :param str slave_ip: 从服务器IP地址。没有从地址的，填写0，或者""
+        :param int slave_port: 从服务器端口。没有从端口的，填写0xFFFF
+        :param str user: 用户名
+        :param int password: 密码
+        :param str info: 附加信息
+        :param ThreadPoolExecutor event_executor: 事件执行器。在此执行器中回调事件执行函数。默认执行器的线程池数量是 `1`
         """
         if not self._lib:
             raise RuntimeError('Library not been loaded')
+        client_id = int(client_id)
         if not (0 <= client_id <= 255):
             raise ValueError('argument "local_client_id" must between 0 and 255')
-        if self._client_id in self._instances:
-            raise KeyError('Duplicated local client id "{}"'.format(self._client_id))
+        if client_id in self._instances:
+            raise KeyError('Duplicated local client id "{}"'.format(client_id))
+        self._client_id = client_id
         self._instances[self._client_id] = self
         self._unit_id = self._unit_id
-        self._client_id = int(client_id)
         self._client_type = client_type
         self._master_ip = str(master_ip)
         self._master_port = int(master_port)
@@ -114,17 +115,22 @@ class Client(LoggerMixin):
             func_cls.bind(cls._lib)
         # C API: init
         logger.debug('initialize: Init')
-        ret = Init.c_func(c_int(unit_id))
+        ret = Init.c_func(c_byte(unit_id))
         check(ret)
         cls._unit_id = unit_id
         # C API: SetCallBackFn
         logger.debug('initialize: SetCallBackFn')
+        cls._c_cbs['connection'] = fntyp_connection_cb(cls._cb_cnx)
+        cls._c_cbs['recvdata'] = fntyp_recvdata_cb(cls._cb_rcv)
+        cls._c_cbs['disconnect'] = fntyp_disconnect_cb(cls._cb_dnx)
+        cls._c_cbs['invokeflow_ret'] = fntyp_invokeflow_ret_cb(cls._cb_dnx)
+        cls._c_cbs['global_connect'] = fntyp_global_connect_cb(cls._cb_g_cnx)
         SetCallBackFn.c_func(
-            fntyp_connection_cb(cls._cb_cnx),
-            fntyp_recvdata_cb(cls._cb_rcv),
-            fntyp_disconnect_cb(cls._cb_dnx),
-            fntyp_invokeflow_ret_cb(cls._cb_flow_ret),
-            fntyp_global_connect_cb(cls._cb_g_cnx),
+            cls._c_cbs['connection'],
+            cls._c_cbs['recvdata'],
+            cls._c_cbs['disconnect'],
+            cls._c_cbs['invokeflow_ret'],
+            cls._c_cbs['global_connect'],
             None
         )
         # C API: SetCallBackFnEx
@@ -149,12 +155,12 @@ class Client(LoggerMixin):
             'arg=%s, local_client_id=%s, access_point_unit_id=%s, ack=%s',
             arg, local_client_id, access_point_unit_id, ack
         )
-        inst = cls.find(local_client_id.value)
+        inst = cls.find(local_client_id)
         if inst:
-            if ack.value == 0:  # 建立连接成功
+            if ack == 0:  # 建立连接成功
                 inst._event_executor.submit(inst.on_connect)
             else:  # 连接失败
-                inst._event_executor.submit(inst.on_connect_fail, ack.value)
+                inst._event_executor.submit(inst.on_connect_fail, ack)
 
     @classmethod
     def _cb_rcv(cls, param, local_client_id, head, data, size):
@@ -171,9 +177,9 @@ class Client(LoggerMixin):
             'param=%s, local_client_id=%s, head=%s, data=%s, size=%s',
             param, local_client_id, head, data, size
         )
-        inst = cls.find(local_client_id.value)
+        inst = cls.find(local_client_id)
         if inst:
-            inst._event_executor.submit(inst.on_data, Head(head), string_at(data, size.value) if data else None)
+            inst._event_executor.submit(inst.on_data, Head(head), string_at(data, size) if data else None)
 
     @classmethod
     def _cb_dnx(cls, param, local_client_id):
@@ -187,7 +193,7 @@ class Client(LoggerMixin):
             'param=%s, local_client_id=%s',
             param, local_client_id
         )
-        inst = cls.find(local_client_id.value)
+        inst = cls.find(local_client_id)
         if inst:
             inst._event_executor.submit(inst.on_disconnect)
 
@@ -210,15 +216,15 @@ class Client(LoggerMixin):
             'arg=%s, local_client_id=%s, head=%s, project_id=%s, invoke_id=%s, ack=%s, msg=%s',
             arg, local_client_id, head, project_id, invoke_id, ack, msg
         )
-        h = Head(head)
-        inst = cls.find(h.dst_unit_client_id)
+        _head = Head(head)
+        inst = cls.find(local_client_id)
         if inst:
             inst._event_executor.submit(
                 inst.on_flow_ack,
-                h,
+                _head,
                 b2s_recode(string_at(project_id).strip(b'\x00'), 'cp936', 'utf-8').strip(),
-                invoke_id.value,
-                ack.value,
+                invoke_id,
+                ack,
                 b2s_recode(string_at(msg).strip(b'\x00'), 'cp936', 'utf-8').strip() if msg else ''
             )
 
@@ -242,11 +248,11 @@ class Client(LoggerMixin):
             arg, local_client_id, head, project_id, invoke_id, ret, param
         )
         _head = Head(head)
-        inst = cls.find(_head.dst_unit_client_id)
+        inst = cls.find(local_client_id)
         if inst:
             _project_id = to_str(string_at(project_id).strip(b'\x00')).strip()
-            _invoke_id = invoke_id.value
-            _status_code = ret.value
+            _invoke_id = invoke_id
+            _status_code = ret
             if _status_code == 1:
                 py_params = []
                 if param:
@@ -280,11 +286,11 @@ class Client(LoggerMixin):
         )
         if callable(cls._global_connect_callback):
             cls._global_connect_callback(
-                unit_id.value,
-                client_id.value,
-                client_type.value,
-                access_unit.value,
-                status.value,
+                ord(unit_id),
+                ord(client_id),
+                ord(client_type),
+                ord(access_unit),
+                ord(status),
                 to_str(string_at(add_info)) if add_info else ''
             )
 
@@ -373,13 +379,14 @@ class Client(LoggerMixin):
         self.logger.info('<%s> connect', self._client_id)
         error_code = CreateConnect.c_func(
             c_byte(self._client_id),
-            c_byte(self._client_type),
+            c_int(self._client_type),
             c_char_p(to_bytes(self._master_ip)) if self._master_ip else None,
             c_ushort(self._master_port),
             c_char_p(to_bytes(self._slave_ip)) if self._slave_ip else None,
             c_ushort(self._slave_port),
             c_char_p(to_bytes(self._user)) if self._user else None,
-            c_char_p(to_bytes(self._password)) if self._password else None
+            c_char_p(to_bytes(self._password)) if self._password else None,
+            c_char_p(to_bytes(self._info)) if self._info else None
         )
         check(error_code)
 

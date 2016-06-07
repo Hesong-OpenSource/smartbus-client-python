@@ -11,7 +11,13 @@ def declare(funcs):
 
     Add the decorated :class:`CFunc` class into to-be-bind functions list
     """
-    return lambda x: funcs.append(x)
+    def wrapper(clz):
+        if not clz.added:
+            funcs.append(clz)
+            clz.added = True
+        return clz
+
+    return wrapper
 
 
 class CFunc:
@@ -19,6 +25,7 @@ class CFunc:
 
     .. warning:: Can **NOT** be used for callback functions
     """
+    added = False
     c_func = None
     prefix = ''
     func_name = ''
