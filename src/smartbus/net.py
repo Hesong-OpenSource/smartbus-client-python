@@ -465,7 +465,7 @@ class Client(LoggerMixin):
             'server_unit_id=%s, process_index=%s, project_id=%s, title=%s, mode=%s, expires=%s, txt=%s',
             server_unit_id, process_index, project_id, title, mode, expires, txt
         )
-        result = SendNotify.c_func(
+        iid = SendNotify.c_func(
             c_byte(self._client_id),
             c_int(server_unit_id),
             c_int(process_index),
@@ -475,7 +475,6 @@ class Client(LoggerMixin):
             c_int(int(expires * 1000)),
             c_char_p(s2b_recode(txt, 'utf-8', 'cp936')) if txt else None
         )
-        iid = result.value
         if iid < 0:
             check(iid)
         return iid

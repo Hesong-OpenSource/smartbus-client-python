@@ -20,7 +20,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/development.html#single-sourcing-the-version
-    version='2.0.1',
+    version='2.0.1.post2',
 
     description='Python wrapper for IPSC CTI Service\'s Smartbus client',
     long_description=long_description,
