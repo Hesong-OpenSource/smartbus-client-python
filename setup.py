@@ -22,7 +22,7 @@ setup(
     # https://packaging.python.org/en/latest/development.html#single-sourcing-the-version
     version='2.0.0',
 
-    description='Python wrapper for Hesong(GuangZhou)\'s IPSC-Smartbus client',
+    description='Python wrapper for IPSC CTI Service\'s Smartbus client',
     long_description=long_description,
 
     # You can just specify the packages manually here if your project is
@@ -34,7 +34,7 @@ setup(
 
     # Author details
     author='Liu Xue Yan',
-    author_email='lxy@heosng.net',
+    author_email='liu_xue_yan@foxmail.com',
 
     # Choose your license
     license='MIT',
