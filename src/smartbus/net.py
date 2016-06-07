@@ -135,7 +135,8 @@ class Client(LoggerMixin):
         )
         # C API: SetCallBackFnEx
         logger.debug('initialize: SetCallBackFnEx')
-        SetCallBackFnEx.c_func(c_char_p(b'smartbus_invokeflow_ack_cb'), fntyp_invokeflow_ack_cb(cls._cb_flow_ack))
+        cls._c_cbs['flow_ack'] = fntyp_invokeflow_ack_cb(cls._cb_flow_ack)
+        SetCallBackFnEx.c_func(c_char_p(b'smartbus_invokeflow_ack_cb'), cls._c_cbs['flow_ack'])
         # others
         cls._global_connect_callback = global_connect_callback
         # Load and init OK!!!
