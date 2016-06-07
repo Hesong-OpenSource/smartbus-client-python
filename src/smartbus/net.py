@@ -501,7 +501,7 @@ class Client(LoggerMixin):
             server_unit_id, process_index, project_id, flow_id, mode, timeout, params
         )
         value_string_list = c_char_p(to_bytes(str(params)))
-        result = RemoteInvokeFlow.c_func(
+        iid = RemoteInvokeFlow.c_func(
             c_byte(self._client_id),
             c_int(server_unit_id),
             c_int(process_index),
@@ -511,7 +511,6 @@ class Client(LoggerMixin):
             c_int(int(timeout * 1000)),
             value_string_list
         )
-        iid = result.value
         if iid < 0:
             check(iid)
         return iid
