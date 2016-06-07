@@ -56,7 +56,7 @@ class Client(LoggerMixin):
             raise KeyError('Duplicated local client id "{}"'.format(client_id))
         self._client_id = client_id
         self._instances[self._client_id] = self
-        self._unit_id = self._unit_id
+        self._unit_id = self.__class__._unit_id
         self._client_type = client_type
         self._master_ip = str(master_ip)
         self._master_port = int(master_port)
@@ -158,6 +158,7 @@ class Client(LoggerMixin):
         inst = cls.find(local_client_id)
         if inst:
             if ack == 0:  # 建立连接成功
+                inst._unit_id = access_point_unit_id
                 inst._event_executor.submit(inst.on_connect)
             else:  # 连接失败
                 inst._event_executor.submit(inst.on_connect_fail, ack)
