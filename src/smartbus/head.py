@@ -28,16 +28,16 @@ class Head:
         self._dst_unit_client_id = 0
         self._packet_size = 0
         self._data_length = 0
-        self._cmd = ptr.contents.cmd.value
-        self._cmd_type = ptr.contents.cmdtype.value
-        self._src_unit_client_type = ord(ptr.contents.src_unit_client_type.value)
-        self._src_unit_id = ord(ptr.contents.src_unit_id.value)
-        self._src_unit_clientId = ord(ptr.contents.src_unit_client_id.value)
-        self._dst_unit_client_type = ord(ptr.contents.dest_unit_client_type.value)
-        self._dst_unit_id = ord(ptr.contents.dest_unit_id.value)
-        self._dst_unit_client_id = ord(ptr.contents.dest_unit_client_id.value)
-        self._packet_size = ptr.contents.packet_size.value
-        self._data_length = ptr.contents.datalen.value
+        self._cmd = ptr.contents.cmd
+        self._cmd_type = ptr.contents.cmdtype
+        self._src_unit_client_type = ord(ptr.contents.src_unit_client_type)
+        self._src_unit_id = ord(ptr.contents.src_unit_id)
+        self._src_unit_clientId = ord(ptr.contents.src_unit_client_id)
+        self._dst_unit_client_type = ord(ptr.contents.dest_unit_client_type)
+        self._dst_unit_id = ord(ptr.contents.dest_unit_id)
+        self._dst_unit_client_id = ord(ptr.contents.dest_unit_client_id)
+        self._packet_size = ptr.contents.packet_size
+        self._data_length = ptr.contents.datalen
 
     def __repr__(self):
         s = '<%s.%s object at %s. ' + \
