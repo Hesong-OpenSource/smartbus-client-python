@@ -15,22 +15,23 @@ except:
     long_description = ''
 
 setup(
-    name='smartbus-client-python',
+    name='yunhuni.cti.busnetcli',
+    namespace_packages = ['yunhuni', 'yunhuni.cti'],
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/development.html#single-sourcing-the-version
-    version='2.0.1.post3',
+    version='3.0.dev1',
 
     description='Python wrapper for IPSC CTI Service\'s Smartbus client',
     long_description=long_description,
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages('src', exclude=['tests']),
+    packages=find_packages('src', exclude=['tests', 'docs']),
     package_dir={'': 'src'},  # tell distutils packages are under src
     # The project's main homepage.
-    url='https://github.com/Hesong-OpenSource/smartbus-client-python',
+    # url='https://github.com/Hesong-OpenSource/smartbus-client-python',
 
     # Author details
     author='Liu Xue Yan',
@@ -40,7 +41,7 @@ setup(
     license='MIT',
 
     # What does your project relate to?
-    keywords='hesong ipsc smartbus',
+    # keywords='key1 key2 key3',
 
     extras_require={
         ':python_version<"3.2"': ['futures'],

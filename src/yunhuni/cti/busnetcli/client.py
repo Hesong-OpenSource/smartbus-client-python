@@ -11,7 +11,7 @@ from ctypes.util import find_library
 from concurrent.futures import ThreadPoolExecutor
 import json
 
-from ._c.net import *
+from ._c.netapi import *
 from .errors import check
 from .head import *
 from .utils import *
